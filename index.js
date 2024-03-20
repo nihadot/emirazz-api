@@ -17,7 +17,8 @@ import { connectDataBase } from './connection/index.js';
 const app = express()
 
 app.use(cors({
-    origin:['http://localhost:3001','http://192.168.29.77:3001',"http://localhost:3000","http://192.168.161.68:3000","http://192.168.161.68:3001","http://192.168.29.1:3001","http://192.168.29.1:3001/login","http://localhost:3001/"],
+    // origin:['http://localhost:3001','http://192.168.29.77:3001',"http://localhost:3000","http://192.168.161.68:3000","http://192.168.161.68:3001","http://192.168.29.1:3001","http://192.168.29.1:3001/login","http://localhost:3001/"],
+    origin:"*",
     credentials:true,
     methods:['GET','POST','PUT','DELETE']
 }))
