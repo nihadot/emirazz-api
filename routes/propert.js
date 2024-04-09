@@ -1,5 +1,5 @@
 import express from 'express';
-import { create,getAll,deleteById,editById,createEnquiry ,getEnquiry} from '../controllers/property.js';
+import { create,getAll,deleteById,editById,getById,createEnquiry ,getEnquiry, getCounts,addEnq} from '../controllers/property.js';
 import { verifyAdmin, verifyToken } from '../middleware/verifyingToken.js';
 
 
@@ -17,6 +17,12 @@ router.delete("/:id", verifyAdmin, deleteById)
 
 router.post("/form", createEnquiry) 
 router.get("/form",verifyAdmin, getEnquiry) 
+router.get("/counts", getCounts) 
+router.get("/:id", getById)
+
+router.post("/enq", addEnq) 
+
+
 
 
 export default router

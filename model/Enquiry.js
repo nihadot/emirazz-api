@@ -5,6 +5,9 @@ const enquirySchema = new Schema({
     propertyId:{
         type: mongoose.Types.ObjectId,
     },
+    developerId:{
+        type: mongoose.Types.ObjectId,
+    },  
     name: {
         type: String,
     },

@@ -10,6 +10,9 @@ const BlogSchema = new Schema({
     mainImgaeLink: {
         type: String,
     },
+    date: {
+        type: Date,
+    },
 }, { timestamps: true });
 
 const Blog = model("Blog", BlogSchema);

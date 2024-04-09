@@ -1,10 +1,13 @@
-import BannerModel from "../model/Banner.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import ClientLogo from "../model/ClientLogo.js";
+
 
 export const create = async (req, res, next) => {
   try {
-    const newBanner = new BannerModel(req.body);
-    const savedBanner = await newBanner.save();
-    return res.status(200).json({ result: savedBanner }).end();
+    const newClient = new ClientLogo(req.body);
+    const savedClient = await newClient.save();
+    return res.status(200).json({ result: savedClient }).end();
   } catch (error) {
     return res
       .status(400)
@@ -15,9 +18,9 @@ export const create = async (req, res, next) => {
 
 export const getAll = async (req, res, next) => {
   try {
-    const getBanners = await BannerModel.find();
+    const getClientLogos = await ClientLogo.find();
 
-    return res.status(200).json({ result: getBanners }).end();
+    return res.status(200).json({ result: getClientLogos }).end();
   } catch (error) {
     return res
       .status(400)
@@ -31,15 +34,14 @@ export const editById = async (req, res, next) => {
     if (!req.body._id) {
       return res.status(400).json({ message: "Id Not Provided!" }).end();
     }
-    console.log(req.body._id)
 
-    const existingBanner = await BannerModel.findById(req.body._id);
+    const existingClientLogo = await ClientLogo.findById(req.body._id);
 
-    if (!existingBanner) {
-      return res.status(400).json({ message: "Banner Not Exist!!" }).end();
+    if (!existingClientLogo) {
+      return res.status(400).json({ message: "Banner logo Not Exist!!" }).end();
     }
 
-    await BannerModel.findByIdAndUpdate(req.body._id, { $set: req.body });
+    await ClientLogo.findByIdAndUpdate(req.body._id, { $set: req.body });
 
     return res.status(200).json({ message: "Successfully Updated" }).end();
   } catch (error) {
@@ -56,13 +58,13 @@ export const deleteById = async (req, res, next) => {
       return res.status(400).json({ message: "Id Not Provided!" }).end();
     }
 
-    const existingBanner = await BannerModel.findByIdAndDelete(req.params.id);
+    const existingClientLogo = await ClientLogo.findById(req.params.id);
 
-    if (!existingBanner) {
-      return res.status(400).json({ message: "Banner Not Exist!!" }).end();
+    if (!existingClientLogo) {
+      return res.status(400).json({ message: "CLient logo Not Exist!!" }).end();
     }
 
-    await BannerModel.findByIdAndDelete(req.params.id);
+    await ClientLogo.findByIdAndDelete(req.params.id);
 
     return res.status(200).json({ message: "Successfully Deleted" }).end();
   } catch (error) {

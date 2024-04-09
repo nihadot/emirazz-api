@@ -2,6 +2,8 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import PropertyModel from "../model/Property.js";
 import Enquiry from "../model/Enquiry.js";
+import mongoose from "mongoose";
+import Property from "../model/Property.js";
 
 export const create = async (req, res, next) => {
   try {
@@ -16,62 +18,103 @@ export const create = async (req, res, next) => {
   }
 };
 
-export const getAll = async (req, res, next) => {
+export const addEnq = async (req, res, next) => {
+  try {
+    const newEnquiry = new Enquiry(req.body);
+    const savedEnquiry = await newEnquiry.save();
+    return res.status(200).json({ result: savedEnquiry }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
 
-  console.log(req.query)
+export const getAll = async (req, res, next) => {
+  console.log(req.query);
   try {
     const pipeline = [];
 
-// Match propertyType if the query parameter is provided
-if (req.query.propertyType) {
-  pipeline.push({
-    $match: {
-      propertyType: {
-        $elemMatch: { $eq: req.query.propertyType }
+    // Match propertyType if the query parameter is provided
+    if (req.query.propertyType) {
+      pipeline.push({
+        $match: {
+          propertyType: {
+            $in: [req.query.propertyType] // Use $in to match elements inside the array
+          }
+        }
+      });
+    }
+    // Add other stages of your pipeline
+    pipeline.push(
+      {
+        $lookup: {
+          from: "developers",
+          localField: "developerRef",
+          foreignField: "_id",
+          as: "developerName",
+        },
+      },
+      {
+        $lookup: {
+          from: "cities",
+          localField: "cityRef",
+          foreignField: "_id",
+          as: "cityName",
+        },
+      },
+      {
+        $unwind: "$developerName",
+      },
+      {
+        $unwind: "$cityName",
+      },
+      {
+        $addFields: {
+          developerName: "$developerName.developerName",
+        },
+      },
+      {
+        $addFields: {
+          cityName: "$cityName.cityName",
+        },
       }
-    }
-  });
-}
+    );
 
-// Add other stages of your pipeline
-pipeline.push(
-  {
-    $lookup: {
-      from: "developers",
-      localField: "developerRef",
-      foreignField: "_id",
-      as: "developerName"
-    }
-  },
-  {
-    $lookup: {
-      from: "cities",
-      localField: "cityRef",
-      foreignField: "_id",
-      as: "cityName"
-    }
-  },
-  {
-    $unwind: "$developerName"
-  },
-  {
-    $unwind: "$cityName"
-  },
-  {
-    $addFields: {
-      developerName: "$developerName.developerName"
-    }
-  },
-  {
-    $addFields: {
-      cityName: "$cityName.cityName"
-    }
-  }
-);
-
-// Execute the pipeline
-const getProperties = await PropertyModel.aggregate(pipeline);
+    // Execute the pipeline
+    const getProperties = await PropertyModel.aggregate(pipeline);
     return res.status(200).json({ result: getProperties }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+export const getById = async (req, res, next) => {
+  try {
+    if (!req.params.id) {
+      return res.status(400).json({ message: "id not Provided" });
+    }
+    const getProperty = await PropertyModel.aggregate([
+      {
+        $match: { _id: new mongoose.Types.ObjectId(req.params.id) },
+      },
+      {
+        $lookup: {
+          from: "cities",
+          localField: "cityRef",
+          foreignField: "_id",
+          as: "cityInfo",
+        },
+      },
+      {
+        $unwind: "$cityInfo",
+      },
+    ]);
+    return res.status(200).json({ result: getProperty }).end();
   } catch (error) {
     return res
       .status(400)
@@ -82,7 +125,7 @@ const getProperties = await PropertyModel.aggregate(pipeline);
 
 export const editById = async (req, res, next) => {
   try {
-    console.log(req.body)
+    console.log(req.body);
     if (!req.body._id) {
       return res.status(400).json({ message: "Id Not Provided!" }).end();
     }
@@ -144,16 +187,16 @@ export const getEnquiry = async (req, res, next) => {
   try {
     const newEnquiry = await Enquiry.aggregate([
       {
-        $lookup:{
-          from:"properties",
-          localField:"propertyId",
-          foreignField:"_id",
-          as:"propertyInfo"
-        }
+        $lookup: {
+          from: "properties",
+          localField: "propertyId",
+          foreignField: "_id",
+          as: "propertyInfo",
+        },
       },
       {
-        $unwind:"$propertyInfo"
-      }
+        $unwind: "$propertyInfo",
+      },
     ]);
     return res.status(200).json({ result: newEnquiry }).end();
   } catch (error) {
@@ -163,4 +206,31 @@ export const getEnquiry = async (req, res, next) => {
       .end();
   }
 };
+
+
+
+export const getCounts = async (req, res, next) => {
+  try {
+    const obj = {}
+    const newTownhouse = await PropertyModel.countDocuments({propertyType:'townhouse'});
+    const newApartment = await PropertyModel.countDocuments({propertyType:'apartment'});
+    const newPenthouse = await PropertyModel.countDocuments({propertyType:'penthouse'});
+    const newVilla = await PropertyModel.countDocuments({propertyType:'villa'});
+
+    
+
+    obj.townhouse = newTownhouse
+    obj.apartment = newApartment
+    obj.penthouse = newPenthouse
+    obj.villa = newVilla
+    return res.status(200).json({ result: obj }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+
 

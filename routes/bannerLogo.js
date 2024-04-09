@@ -1,5 +1,5 @@
 import express from 'express';
-import { create,getAll,deleteById,editById,getById } from '../controllers/blog.js';
+import { create,getAll,deleteById,editById } from '../controllers/bannerlogo.js';
 import { verifyAdmin } from '../middleware/verifyingToken.js';
 
 
@@ -10,12 +10,8 @@ const router = express.Router()
 router.post("/",verifyAdmin,create)
 // GET ALL PROPERTY
 router.get("/", getAll)
-
-// 
-router.get("/get-one/:id",getById)
-
 // UPDATE PROPERTY BY ID
-router.put("/", verifyAdmin,editById)
+router.put("/",verifyAdmin, editById)
 // DELETE PROPERTY BY ID
 router.delete("/:id", verifyAdmin, deleteById) 
 

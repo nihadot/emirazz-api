@@ -27,6 +27,20 @@ export const getAll = async (req, res, next) => {
       .end();
   }
 };
+export const getById = async (req, res, next) => {
+  try {
+    if(!req.params.id) return res.status(400).json({message:"Id not Provided"})
+    const getBlog = await BlogModel.findById(req.params.id);
+
+    return res.status(200).json({ result: getBlog }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
 
 export const editById = async (req, res, next) => {
   try {

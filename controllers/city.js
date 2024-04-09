@@ -1,6 +1,8 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import CityModel from "../model/City.js";
+import PropertyModel from "../model/Property.js";
+import mongoose from "mongoose";
 
 export const create = async (req, res, next) => {
   try {
@@ -18,8 +20,17 @@ export const create = async (req, res, next) => {
 export const getAll = async (req, res, next) => {
   try {
     const getCties = await CityModel.find();
+    let arr = [];
+    for (let city of getCties) {
+      if (city) {
+        const getCtiesCount = await PropertyModel.countDocuments({
+          cityRef: new mongoose.Types.ObjectId(city._id),
+        });
+        arr.push({ ...city._doc, count: getCtiesCount });
+      }
+    }
 
-    return res.status(200).json({ result: getCties }).end();
+    return res.status(200).json({ result: arr }).end();
   } catch (error) {
     return res
       .status(400)
