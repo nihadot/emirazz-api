@@ -32,7 +32,6 @@ export const addEnq = async (req, res, next) => {
 };
 
 export const getAll = async (req, res, next) => {
-  console.log(req.query);
   try {
     const pipeline = [];
 
@@ -125,7 +124,6 @@ export const getById = async (req, res, next) => {
 
 export const editById = async (req, res, next) => {
   try {
-    console.log(req.body);
     if (!req.body._id) {
       return res.status(400).json({ message: "Id Not Provided!" }).end();
     }

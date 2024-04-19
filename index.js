@@ -20,9 +20,8 @@ dotenv.config();
 const app = express()
 
 const corsOptions = {
-    origin: ['http://localhost:5173','http://localhost:3000','http://localhost:3001'],
-    credentials: true, // Allow cookies or authorization headers to be sent,
-    methods:['GET','POST','PUT','DELETE']
+  origin: '*', 
+  credentials: true, // Allow cookies or authorization headers to be sent
   };
 app.use(cors(corsOptions));
 app.use(express.json({limit:"50mb"}));
@@ -41,8 +40,9 @@ app.use("/api/v1/banner",bannerRouter)
 app.use("/api/v1/developer",developerRouter)
 app.use("/api/v1/banner-logo",bannerLogoRouter)
 app.use("/api/v1/client-logo",clientLogoRouter)
-app.get("/",(req,res)=>{
-  req.json({message:"Server is working..."})
+app.get("/api/v1/",(req,res)=>{
+  res.send(`<h1>Server is Working Fine<h1/>`)
+  
 })
 
 

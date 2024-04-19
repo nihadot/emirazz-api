@@ -31,7 +31,6 @@ export const editById = async (req, res, next) => {
     if (!req.body._id) {
       return res.status(400).json({ message: "Id Not Provided!" }).end();
     }
-    console.log(req.body._id)
 
     const existingBanner = await BannerModel.findById(req.body._id);
 
