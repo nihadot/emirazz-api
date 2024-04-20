@@ -62,14 +62,14 @@ export const login = async (req, res, next) => {
       { expiresIn: "30 days" }
     );
 
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-      secure: true, // Ensures the cookie is sent only over HTTPS connections
-      sameSite: 'None' // Allows the cookie to be sent in cross-origin requests
-    }); //30 days valid
+    // res.cookie("accessToken", accessToken, {
+    //   httpOnly: true,
+    //   maxAge: 30 * 24 * 60 * 60 * 1000,
+    //   secure: true, // Ensures the cookie is sent only over HTTPS connections
+    //   sameSite: 'None' // Allows the cookie to be sent in cross-origin requests
+    // }); //30 days valid
 
-    return res.status(200).json({ result:otherDetails,token:accessToken,expiredTimeZone:''}).end();
+    return res.status(200).json({ result:otherDetails,token:accessToken})
 
   } catch (error) {
     
