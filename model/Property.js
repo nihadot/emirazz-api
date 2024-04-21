@@ -20,7 +20,7 @@ const PropertySchema = new Schema({
         type:String,
     },
     propertyType:{
-        type:Array,
+        type:[Schema.Types.ObjectId],
     },
     mainImgaeLink: {
         type: String,

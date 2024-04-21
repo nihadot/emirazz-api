@@ -13,6 +13,7 @@ import bannerRouter from "./routes/banner.js"
 import developerRouter from "./routes/developer.js"
 import bannerLogoRouter from "./routes/bannerLogo.js"
 import clientLogoRouter from "./routes/clientLogo.js"
+import propertyTypeRouter from "./routes/propertyTypeRouter.js"
 
 import { connectDataBase } from './connection/index.js';
 dotenv.config();
@@ -37,6 +38,7 @@ app.use("/api/v1/banner",bannerRouter)
 app.use("/api/v1/developer",developerRouter)
 app.use("/api/v1/banner-logo",bannerLogoRouter)
 app.use("/api/v1/client-logo",clientLogoRouter)
+app.use("/api/v1/property-type",propertyTypeRouter)
 app.get("/api/v1/",(req,res)=>{
   res.send(`<h1>Server is Working Fine<h1/>`)
   

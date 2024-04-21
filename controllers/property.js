@@ -4,6 +4,7 @@ import PropertyModel from "../model/Property.js";
 import Enquiry from "../model/Enquiry.js";
 import mongoose from "mongoose";
 import Property from "../model/Property.js";
+import PropertyType from "../model/PropertyType.js";
 
 export const create = async (req, res, next) => {
   try {
@@ -34,15 +35,14 @@ export const addEnq = async (req, res, next) => {
 export const getAll = async (req, res, next) => {
   try {
     const pipeline = [];
-
     // Match propertyType if the query parameter is provided
-    if (req.query.propertyType) {
+    if (Boolean(req.query.propertyType && req.query.propertyTypeId)) {
       pipeline.push({
         $match: {
           propertyType: {
-            $in: [req.query.propertyType] // Use $in to match elements inside the array
-          }
-        }
+            $in: [new mongoose.Types.ObjectId(req.query.propertyTypeId)], // Use $in to match elements inside the array
+          },
+        },
       });
     }
     // Add other stages of your pipeline
@@ -81,9 +81,21 @@ export const getAll = async (req, res, next) => {
       }
     );
 
-    // Execute the pipeline
     const getProperties = await PropertyModel.aggregate(pipeline);
-    return res.status(200).json({ result: getProperties }).end();
+
+    const allProperties = [];
+    for (let property of getProperties) {
+      if (property?.propertyType?.length > 0) {
+        const propertyInfo = [];
+        for (let propertyId of property?.propertyType) {
+          const propertyInfoData = await PropertyType.findById(propertyId);
+          propertyInfo.push(propertyInfoData);
+        }
+        allProperties.push({ ...property, propertyType: propertyInfo });
+      }
+    }
+
+    return res.status(200).json({ result: allProperties }).end();
   } catch (error) {
     return res
       .status(400)
@@ -113,7 +125,19 @@ export const getById = async (req, res, next) => {
         $unwind: "$cityInfo",
       },
     ]);
-    return res.status(200).json({ result: getProperty }).end();
+
+    const properties = []
+    for(let property of getProperty){
+      const propertyArray = []
+      if(property?.propertyType.length > 0 ){
+        for(let propertyId of property?.propertyType){
+          const propertyInfo = await PropertyType.findById(propertyId)
+          propertyArray.push(propertyInfo)
+        }
+      }
+      properties.push({...property,propertyType:propertyArray})
+    }
+    return res.status(200).json({ result: properties }).end();
   } catch (error) {
     return res
       .status(400)
@@ -192,9 +216,7 @@ export const getEnquiry = async (req, res, next) => {
           as: "propertyInfo",
         },
       },
-      {
-        $unwind: "$propertyInfo",
-      },
+
     ]);
     return res.status(200).json({ result: newEnquiry }).end();
   } catch (error) {
@@ -205,22 +227,26 @@ export const getEnquiry = async (req, res, next) => {
   }
 };
 
-
-
 export const getCounts = async (req, res, next) => {
   try {
-    const obj = {}
-    const newTownhouse = await PropertyModel.countDocuments({propertyType:'townhouse'});
-    const newApartment = await PropertyModel.countDocuments({propertyType:'apartment'});
-    const newPenthouse = await PropertyModel.countDocuments({propertyType:'penthouse'});
-    const newVilla = await PropertyModel.countDocuments({propertyType:'villa'});
+    const obj = {};
+    const newTownhouse = await PropertyModel.countDocuments({
+      propertyType: "townhouse",
+    });
+    const newApartment = await PropertyModel.countDocuments({
+      propertyType: "apartment",
+    });
+    const newPenthouse = await PropertyModel.countDocuments({
+      propertyType: "penthouse",
+    });
+    const newVilla = await PropertyModel.countDocuments({
+      propertyType: "villa",
+    });
 
-    
-
-    obj.townhouse = newTownhouse
-    obj.apartment = newApartment
-    obj.penthouse = newPenthouse
-    obj.villa = newVilla
+    obj.townhouse = newTownhouse;
+    obj.apartment = newApartment;
+    obj.penthouse = newPenthouse;
+    obj.villa = newVilla;
     return res.status(200).json({ result: obj }).end();
   } catch (error) {
     return res
@@ -229,6 +255,3 @@ export const getCounts = async (req, res, next) => {
       .end();
   }
 };
-
-
-
