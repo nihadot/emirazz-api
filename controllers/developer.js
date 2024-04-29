@@ -1,10 +1,17 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import DeveloperModel from "../model/Developer.js";
+import { deleteFile } from "../middleware/deleteFile.js";
 
 export const create = async (req, res, next) => {
   try {
-    const newDeveloper = new DeveloperModel(req.body);
+    const mainImgaeLink = req.files.mainImgaeLink
+      ? req.files.mainImgaeLink[0].filename
+      : "";
+    const newDeveloper = new DeveloperModel({
+      ...req.body,
+      mainImgaeLink: mainImgaeLink,
+    });
     const savedDeveloper = await newDeveloper.save();
     return res.status(200).json({ result: savedDeveloper }).end();
   } catch (error) {
@@ -40,7 +47,29 @@ export const editById = async (req, res, next) => {
       return res.status(400).json({ message: "City Not Exist!!" }).end();
     }
 
-    await DeveloperModel.findByIdAndUpdate(req.body._id, { $set: req.body });
+    let obj = {
+      ...req.body,
+    };
+
+    if (req.files.mainImgaeLink) {
+      obj.mainImgaeLink = req.files.mainImgaeLink[0].filename;
+      const filename = existingDeveloper.mainImgaeLink;
+      const filePath = `/mainImage/${filename}`;
+      try {
+        await deleteFile(filePath);
+      } catch (error) {
+        return res
+          .status(400)
+          .json({ message: error.message || "Internal server error!" })
+          .end();
+      }
+    }
+
+    await DeveloperModel.findByIdAndUpdate(
+      req.body._id,
+      { $set: { ...obj } },
+      { new: true }
+    );
 
     return res.status(200).json({ message: "Successfully Updated" }).end();
   } catch (error) {
@@ -64,6 +93,20 @@ export const deleteById = async (req, res, next) => {
     }
 
     await DeveloperModel.findByIdAndDelete(req.params.id);
+
+    if (existingDeveloper?.mainImgaeLink) {
+      const filename = existingDeveloper.mainImgaeLink;
+      const filePath = `/mainImage/${filename}`;
+      try {
+        const response = await deleteFile(filePath);
+        console.log(response);
+      } catch (error) {
+        return res
+          .status(400)
+          .json({ message: error.message || "Internal server error!" })
+          .end();
+      }
+    }
 
     return res.status(200).json({ message: "Successfully Deleted" }).end();
   } catch (error) {

@@ -1,8 +1,15 @@
+import { deleteFile } from "../middleware/deleteFile.js";
 import BannerModel from "../model/Banner.js";
 
 export const create = async (req, res, next) => {
   try {
-    const newBanner = new BannerModel(req.body);
+    const mainImgaeLink = req.files.mainImgaeLink
+      ? req.files.mainImgaeLink[0].filename
+      : "";
+    const newBanner = new BannerModel({
+      ...req.body,
+      mainImgaeLink: mainImgaeLink,
+    });
     const savedBanner = await newBanner.save();
     return res.status(200).json({ result: savedBanner }).end();
   } catch (error) {
@@ -38,9 +45,32 @@ export const editById = async (req, res, next) => {
       return res.status(400).json({ message: "Banner Not Exist!!" }).end();
     }
 
-    await BannerModel.findByIdAndUpdate(req.body._id, { $set: req.body });
+    let obj = {
+      ...req.body,
+    };
+    if (req.files.mainImgaeLink) {
+      obj.mainImgaeLink = req.files.mainImgaeLink[0].filename;
+      const filename = existingBanner.mainImgaeLink;
+      const filePath = `/mainImage/${filename}`;
+      try {
+        await deleteFile(filePath);
+      } catch (error) {
+        return res
+          .status(400)
+          .json({ message: error.message || "Internal server error!" })
+          .end();
+      }
+    }
+    const data = await BannerModel.findByIdAndUpdate(
+      req.body._id,
+      { $set: { ...obj } },
+      { new: true }
+    );
 
-    return res.status(200).json({ message: "Successfully Updated" }).end();
+    return res
+      .status(200)
+      .json({ message: "Successfully Updated", result: data })
+      .end();
   } catch (error) {
     return res
       .status(400)
@@ -62,6 +92,20 @@ export const deleteById = async (req, res, next) => {
     }
 
     await BannerModel.findByIdAndDelete(req.params.id);
+
+    if(existingBanner?.mainImgaeLink){
+      const filename = existingBanner.mainImgaeLink;
+      const filePath = `/mainImage/${filename}`;
+      try {
+        const response = await deleteFile(filePath);
+        console.log(response)
+      } catch (error) {
+        return res
+          .status(400)
+          .json({ message: error.message || "Internal server error!" })
+          .end();
+      }
+    }
 
     return res.status(200).json({ message: "Successfully Deleted" }).end();
   } catch (error) {

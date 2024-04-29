@@ -33,19 +33,15 @@ const PropertySchema = new Schema({
             type:String
         }
     }],
-    facilities: [{
-        value:String
-    }],
-    paymentPlan: [{
-        value:String
-    }],
-    areasNearBy: [{
-        value:{
-            type:String
-        }
-    }],
+    facilities: [],
+    paymentPlan: [],
+    areasNearBy: [],
     description:{
         type:String
+    },
+    isChecked:{
+        type:Boolean,
+        default:false
     },
     developerRef:{
         type: Schema.Types.ObjectId

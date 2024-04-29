@@ -9,6 +9,10 @@ export const verifyToken = (req, res, next) => {
 
   const isToken = token.split(" ")[1];
 
+  if (isToken === 'null'){
+    return res.status(401).json({ message: "Your are not authenticated!" });
+  }
+
   jwt.verify(isToken, process.env.JWT_SECRET, (err, user) => {
     if (err)
       return res

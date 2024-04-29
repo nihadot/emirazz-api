@@ -1,10 +1,17 @@
 import mongoose from "mongoose";
 import PropertyType from "../model/PropertyType.js";
 import Property from "../model/Property.js";
+import { deleteFile } from "../middleware/deleteFile.js";
 
 export const create = async (req, res, next) => {
   try {
-    const newPropertyType = new PropertyType(req.body);
+    const mainImgaeLink = req.files.mainImgaeLink
+      ? req.files.mainImgaeLink[0].filename
+      : "";
+    const newPropertyType = new PropertyType({
+      ...req.body,
+      mainImgaeLink: mainImgaeLink,
+    });
     const savedPropertyType = await newPropertyType.save();
     return res.status(200).json({ result: savedPropertyType }).end();
   } catch (error) {
@@ -79,7 +86,28 @@ export const editById = async (req, res, next) => {
       return res.status(400).json({ message: "Property Not Exist!!" }).end();
     }
 
-    await PropertyType.findByIdAndUpdate(req.body._id, { $set: req.body });
+    let obj = {
+      ...req.body,
+    };
+    if (req.files.mainImgaeLink && existAccount?.mainImgaeLink.length > 0) {
+      obj.mainImgaeLink = req.files.mainImgaeLink[0].filename;
+      const filename = existAccount.mainImgaeLink;
+      const filePath = `/mainImage/${filename}`;
+      try {
+        await deleteFile(filePath);
+      } catch (error) {
+        return res
+          .status(400)
+          .json({ message: error.message || "Internal server error!" })
+          .end();
+      }
+    }
+
+    await PropertyType.findByIdAndUpdate(
+      req.body._id,
+      { $set: { ...obj } },
+      { new: true }
+    );
 
     return res.status(200).json({ message: "Successfully Updated" }).end();
   } catch (error) {
@@ -103,6 +131,20 @@ export const deleteById = async (req, res, next) => {
     }
 
     await PropertyType.findByIdAndDelete(req.params.id);
+
+    if (existAccount?.mainImgaeLink && existAccount.mainImgaeLink.length > 0) {
+      const filename = existAccount.mainImgaeLink;
+      const filePath = `/mainImage/${filename}`;
+      try {
+        const response = await deleteFile(filePath);
+        console.log(response);
+      } catch (error) {
+        return res
+          .status(400)
+          .json({ message: error.message || "Internal server error!" })
+          .end();
+      }
+    }
 
     return res.status(200).json({ message: "Successfully Deleted" }).end();
   } catch (error) {

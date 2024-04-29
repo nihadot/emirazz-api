@@ -1,18 +1,19 @@
 import express from 'express';
 import { create,getAll,deleteById,editById } from '../controllers/banner.js';
 import { verifyAdmin } from '../middleware/verifyingToken.js';
+import { upload } from '../middleware/multer.js';
 
 
 const router = express.Router()
 
 
-// CREATE PROPERTY
-router.post("/",verifyAdmin,create)
-// GET ALL PROPERTY
+// CREATE BANNER
+router.post("/",verifyAdmin,upload,create)
+// GET ALL BANNER
 router.get("/", getAll)
-// UPDATE PROPERTY BY ID
-router.put("/",verifyAdmin, editById)
-// DELETE PROPERTY BY ID
+// UPDATE BANNER BY ID
+router.put("/",verifyAdmin,upload, editById)
+// DELETE BANNER BY ID
 router.delete("/:id", verifyAdmin, deleteById) 
 
 

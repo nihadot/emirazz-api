@@ -1,10 +1,17 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import BlogModel from "../model/Blog.js";
+import { deleteFile } from "../middleware/deleteFile.js";
 
 export const create = async (req, res, next) => {
   try {
-    const newBlog = new BlogModel(req.body);
+    const mainImgaeLink = req.files.mainImgaeLink
+      ? req.files.mainImgaeLink[0].filename
+      : "";
+    const newBlog = new BlogModel({
+      ...req.body,
+      mainImgaeLink: mainImgaeLink,
+    });
     const savedBlog = await newBlog.save();
     return res.status(200).json({ result: savedBlog }).end();
   } catch (error) {
@@ -29,7 +36,8 @@ export const getAll = async (req, res, next) => {
 };
 export const getById = async (req, res, next) => {
   try {
-    if(!req.params.id) return res.status(400).json({message:"Id not Provided"})
+    if (!req.params.id)
+      return res.status(400).json({ message: "Id not Provided" });
     const getBlog = await BlogModel.findById(req.params.id);
 
     return res.status(200).json({ result: getBlog }).end();
@@ -40,7 +48,6 @@ export const getById = async (req, res, next) => {
       .end();
   }
 };
-
 
 export const editById = async (req, res, next) => {
   try {
@@ -54,7 +61,27 @@ export const editById = async (req, res, next) => {
       return res.status(400).json({ message: "City Not Exist!!" }).end();
     }
 
-    await BlogModel.findByIdAndUpdate(req.body._id, { $set: req.body });
+    let obj = {
+      ...req.body,
+    };
+    if (req.files.mainImgaeLink) {
+      obj.mainImgaeLink = req.files.mainImgaeLink[0].filename;
+      const filename = existingBlog.mainImgaeLink;
+      const filePath = `/mainImage/${filename}`;
+      try {
+        await deleteFile(filePath);
+      } catch (error) {
+        return res
+          .status(400)
+          .json({ message: error.message || "Internal server error!" })
+          .end();
+      }
+    }
+    await BlogModel.findByIdAndUpdate(
+      req.body._id,
+      { $set: { ...obj } },
+      { new: true }
+    );
 
     return res.status(200).json({ message: "Successfully Updated" }).end();
   } catch (error) {
@@ -74,10 +101,24 @@ export const deleteById = async (req, res, next) => {
     const existingBlog = await BlogModel.findById(req.params.id);
 
     if (!existingBlog) {
-      return res.status(400).json({ message: "City Not Exist!!" }).end();
+      return res.status(400).json({ message: "Blog Not Exist!!" }).end();
     }
 
     await BlogModel.findByIdAndDelete(req.params.id);
+
+    if (existingBlog?.mainImgaeLink) {
+      const filename = existingBlog.mainImgaeLink;
+      const filePath = `/mainImage/${filename}`;
+      try {
+        const response = await deleteFile(filePath);
+        console.log(response);
+      } catch (error) {
+        return res
+          .status(400)
+          .json({ message: error.message || "Internal server error!" })
+          .end();
+      }
+    }
 
     return res.status(200).json({ message: "Successfully Deleted" }).end();
   } catch (error) {
