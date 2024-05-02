@@ -1,5 +1,5 @@
 import express from 'express';
-import { create,getAll,deleteById,editById,getById,createEnquiry ,getEnquiry, getCounts,addEnq} from '../controllers/property.js';
+import { create,getAll,deleteById,editById,getById,createEnquiry ,getEnquiry, getCounts,addEnq,deleteSmallImage} from '../controllers/property.js';
 import { verifyAdmin, verifyToken } from '../middleware/verifyingToken.js';
 import { upload } from '../middleware/multer.js';
 
@@ -22,6 +22,7 @@ router.get("/counts", getCounts)
 router.get("/:id", getById)
 
 router.post("/enq", addEnq) 
+router.post("/small-image/:id", deleteSmallImage) 
 
 
 

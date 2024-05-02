@@ -47,8 +47,10 @@ export const login = async (req, res, next) => {
 
   try {
     const existMail = await AdminModel.findOne({ email });
+    console.log(req.body)
 
     if(!existMail) return res.status(400).json({message:'User is not founded!'}).end();
+    console.log(existMail)
 
     const isPassword = await bcrypt.compare(req.body.password, existMail.password);
 

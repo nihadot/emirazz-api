@@ -30,5 +30,5 @@ const storage = multer.diskStorage({
 
 export const upload = multer({ storage: storage }).fields([
   { name: "mainImgaeLink", maxCount: 1 },
-  { name: "smallImage", maxCount: 20 },
+  { name: "smallImage", maxCount: 10 },
 ]);

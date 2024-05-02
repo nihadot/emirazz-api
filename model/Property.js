@@ -28,11 +28,7 @@ const PropertySchema = new Schema({
     videoLink: {
         type: String,
     },
-    smallImage:[{
-        image:{
-            type:String
-        }
-    }],
+    smallImage:[],
     facilities: [],
     paymentPlan: [],
     areasNearBy: [],
