@@ -11,8 +11,7 @@ const router = express.Router()
 router.post("/",verifyAdmin,upload,create)
 // GET ALL PROPERTY
 router.get("/", getAll)
-
-// 
+// GET BY ID
 router.get("/get-one/:id",getById)
 
 // UPDATE PROPERTY BY ID

@@ -17,6 +17,11 @@ const enquirySchema = new Schema({
     number: {
         type: String,
     },
+    status: {
+        type: String,
+        enum:["pending","delivered","ontheway"],
+        default:"pending"
+    },
 }, { timestamps: true });
 
 const Enquiry = model("Enquiry", enquirySchema);

@@ -50,15 +50,18 @@ export const editById = async (req, res, next) => {
     };
     if (req.files.mainImgaeLink) {
       obj.mainImgaeLink = req.files.mainImgaeLink[0].filename;
-      const filename = existingBanner.mainImgaeLink;
-      const filePath = `/mainImage/${filename}`;
-      try {
-        await deleteFile(filePath);
-      } catch (error) {
-        return res
+      if(existingBanner.mainImgaeLink && existingBanner.mainImgaeLink.length > 0){
+
+        const filename = existingBanner.mainImgaeLink;
+        const filePath = `/mainImage/${filename}`;
+        try {
+          await deleteFile(filePath);
+        } catch (error) {
+          return res
           .status(400)
           .json({ message: error.message || "Internal server error!" })
           .end();
+        }
       }
     }
     const data = await BannerModel.findByIdAndUpdate(
@@ -93,7 +96,7 @@ export const deleteById = async (req, res, next) => {
 
     await BannerModel.findByIdAndDelete(req.params.id);
 
-    if(existingBanner?.mainImgaeLink){
+    if(existingBanner?.mainImgaeLink && existingBanner?.mainImgaeLink?.length > 0){
       const filename = existingBanner.mainImgaeLink;
       const filePath = `/mainImage/${filename}`;
       try {

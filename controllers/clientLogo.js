@@ -50,20 +50,25 @@ export const editById = async (req, res, next) => {
 
     if (req.files.mainImgaeLink) {
       obj.mainImgaeLink = req.files.mainImgaeLink[0].filename;
-      const filename = existingClientLogo.mainImgaeLink;
-      const filePath = `/mainImage/${filename}`;
-      try {
-        await deleteFile(filePath);
-      } catch (error) {
-        return res
-          .status(400)
-          .json({ message: error.message || "Internal server error!" })
-          .end();
+      if (existingClientLogo?.mainImgaeLink && existingClientLogo?.mainImgaeLink?.length > 0) {
+        const filename = existingClientLogo.mainImgaeLink;
+        const filePath = `/mainImage/${filename}`;
+        try {
+          await deleteFile(filePath);
+        } catch (error) {
+          return res
+            .status(400)
+            .json({ message: error.message || "Internal server error!" })
+            .end();
+        }
       }
     }
 
-
-    await ClientLogo.findByIdAndUpdate(req.body._id, { $set: { ...obj } },{new:true});
+    await ClientLogo.findByIdAndUpdate(
+      req.body._id,
+      { $set: { ...obj } },
+      { new: true }
+    );
 
     return res.status(200).json({ message: "Successfully Updated" }).end();
   } catch (error) {
@@ -86,12 +91,15 @@ export const deleteById = async (req, res, next) => {
       return res.status(400).json({ message: "Client logo Not Exist!!" }).end();
     }
 
-    if(existingClientLogo?.mainImgaeLink){
+    if (
+      existingClientLogo?.mainImgaeLink &&
+      existingClientLogo?.mainImgaeLink.length > 0
+    ) {
       const filename = existingClientLogo.mainImgaeLink;
       const filePath = `/mainImage/${filename}`;
       try {
         const response = await deleteFile(filePath);
-        console.log(response)
+        console.log(response);
       } catch (error) {
         return res
           .status(400)

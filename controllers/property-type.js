@@ -89,17 +89,22 @@ export const editById = async (req, res, next) => {
     let obj = {
       ...req.body,
     };
-    if (req.files.mainImgaeLink && existAccount?.mainImgaeLink.length > 0) {
+    if (req.files.mainImgaeLink) {
       obj.mainImgaeLink = req.files.mainImgaeLink[0].filename;
-      const filename = existAccount.mainImgaeLink;
-      const filePath = `/mainImage/${filename}`;
-      try {
-        await deleteFile(filePath);
-      } catch (error) {
-        return res
-          .status(400)
-          .json({ message: error.message || "Internal server error!" })
-          .end();
+      if (
+        existAccount?.mainImgaeLink &&
+        existAccount?.mainImgaeLink.length > 0
+      ) {
+        const filename = existAccount.mainImgaeLink;
+        const filePath = `/mainImage/${filename}`;
+        try {
+          await deleteFile(filePath);
+        } catch (error) {
+          return res
+            .status(400)
+            .json({ message: error.message || "Internal server error!" })
+            .end();
+        }
       }
     }
 
@@ -129,6 +134,16 @@ export const deleteById = async (req, res, next) => {
     if (!existAccount) {
       return res.status(400).json({ message: "Property Not Exist!!" }).end();
     }
+
+    
+
+    const isExistingPropertyType = await Property.findOne({propertyType:new mongoose.Types.ObjectId(req.params.id)});
+
+    if(isExistingPropertyType){
+      return res.status(400).json({ message: "Already property avalible under the type" }).end();
+    }
+
+    
 
     await PropertyType.findByIdAndDelete(req.params.id);
 

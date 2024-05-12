@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import Property from "../model/Property.js";
 import PropertyType from "../model/PropertyType.js";
 import { deleteFile } from "../middleware/deleteFile.js";
+import Developer from "../model/Developer.js";
 
 export const create = async (req, res, next) => {
   try {
@@ -111,7 +112,7 @@ export const getAll = async (req, res, next) => {
     if (Boolean(req.query.developer)) {
       pipeline.push({
         $match: {
-          developerRef: new mongoose.Types.ObjectId(req.query.developer)
+          developerRef: new mongoose.Types.ObjectId(req.query.developer),
         },
       });
     }
@@ -119,11 +120,11 @@ export const getAll = async (req, res, next) => {
     if (Boolean(req.query.cities)) {
       pipeline.push({
         $match: {
-          cityRef: new mongoose.Types.ObjectId(req.query.cities)
+          cityRef: new mongoose.Types.ObjectId(req.query.cities),
         },
       });
     }
-    
+
     // Add other stages of your pipeline
     pipeline.push(
       {
@@ -227,8 +228,6 @@ export const getById = async (req, res, next) => {
 
 export const editById = async (req, res, next) => {
   try {
-
-    
     // --------------------------
     const { propertyType, facilities, paymentPlan, areasNearBy, smallImage } =
       req.body;
@@ -272,7 +271,7 @@ export const editById = async (req, res, next) => {
       delete req.body.smallImage;
     }
     // console.log(req.body,'after')
-// 
+    //
 
     // console.log(req.body.smallImage)
     // console.log(Boolean(req.body.smallImage),'boo')
@@ -325,7 +324,6 @@ export const editById = async (req, res, next) => {
       }
     }
 
-  
     // if (req.files.smallImage) {
     //   obj.smallImage = req.files.smallImage[0].filename;
     //   if (existAccount.mainImgaeLink.length > 0) {
@@ -342,7 +340,6 @@ export const editById = async (req, res, next) => {
     //   }
     // }
 
-
     let ArraysmallImage = [];
 
     if (req.files.smallImage && req.files.smallImage.length > 0) {
@@ -350,9 +347,6 @@ export const editById = async (req, res, next) => {
         ArraysmallImage.push(item.filename)
       );
     }
-
-    
-
 
     await PropertyModel.findByIdAndUpdate(
       req.body._id,
@@ -364,14 +358,41 @@ export const editById = async (req, res, next) => {
       { new: true }
     );
 
-    if(ArraysmallImage.length > 0){
+    if (ArraysmallImage.length > 0) {
       const result = await PropertyModel.findById(req.body._id);
-      result.smallImage.push(...ArraysmallImage)
+      result.smallImage.push(...ArraysmallImage);
       await result.save();
     }
 
+    return res.status(200).json({ message: "Successfully Updated" }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+export const updateStatus = async (req, res, next) => {
+  try {
+    if (!req.body.id) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
 
-    
+    const existAccount = await Enquiry.findById(req.body.id);
+
+    if (!existAccount) {
+      return res.status(400).json({ message: "Enquiry Not Exist!!" }).end();
+    }
+
+    await Enquiry.findByIdAndUpdate(
+      req.body.id,
+      {
+        $set: {
+          status: req.body.status,
+        },
+      },
+      { new: true }
+    );
 
     return res.status(200).json({ message: "Successfully Updated" }).end();
   } catch (error) {
@@ -394,25 +415,21 @@ export const deleteById = async (req, res, next) => {
       return res.status(400).json({ message: "Property Not Exist!!" }).end();
     }
 
-   
-
     await PropertyModel.findByIdAndDelete(req.params.id);
 
     if (existAccount?.smallImage) {
-      for( let file of existAccount?.smallImage){
+      for (let file of existAccount?.smallImage) {
         const filePath = `/smallImage/${file}`;
-        if(file){
+        if (file) {
           const response = await deleteFile(filePath);
         }
       }
     }
 
-
     if (existAccount?.mainImgaeLink) {
-        const filePath = `/mainImage/${existAccount?.mainImgaeLink}`;
-          const response = await deleteFile(filePath);
-      }
-  
+      const filePath = `/mainImage/${existAccount?.mainImgaeLink}`;
+      const response = await deleteFile(filePath);
+    }
 
     return res.status(200).json({ message: "Successfully Deleted" }).end();
   } catch (error) {
@@ -438,17 +455,25 @@ export const createEnquiry = async (req, res, next) => {
 
 export const getEnquiry = async (req, res, next) => {
   try {
-    const newEnquiry = await Enquiry.aggregate([
-      {
-        $lookup: {
-          from: "properties",
-          localField: "propertyId",
-          foreignField: "_id",
-          as: "propertyInfo",
-        },
-      },
-    ]);
-    return res.status(200).json({ result: newEnquiry }).end();
+    const newEnquiry = await Enquiry.find();
+
+    const newArray = [];
+
+    for (let item of newEnquiry) {
+      if (item) {
+        const getProperty = await PropertyModel.findById(item.propertyId);
+        const getDeveloper = await Developer.findById(item.developerId);
+        if (getProperty && getDeveloper) {
+          newArray.push({
+            ...item._doc,
+            propertyName: getProperty.propretyHeadline,
+            developerName: getDeveloper.developerName,
+          });
+        }
+      }
+    }
+
+    return res.status(200).json({ result: newArray }).end();
   } catch (error) {
     return res
       .status(400)
@@ -498,26 +523,28 @@ export const deleteSmallImage = async (req, res, next) => {
       return res.status(400).json({ message: "Property Not Exist!!" }).end();
     }
 
-   const response = await PropertyModel.findByIdAndUpdate(
+    const response = await PropertyModel.findByIdAndUpdate(
       req.params.id,
       {
         $pull: { smallImage: req.body.smallImage },
       },
       { new: true }
     );
-      const filePath = `/smallImage/${req.body.smallImage}`;
-      try {
-        const response = await deleteFile(filePath);
-        console.log(response);
-      } catch (error) {
-        return res
-          .status(400)
-          .json({ message: error.message || "Internal server error!" })
-          .end();
-      }
-    
+    const filePath = `/smallImage/${req.body.smallImage}`;
+    try {
+      const response = await deleteFile(filePath);
+      console.log(response);
+    } catch (error) {
+      return res
+        .status(400)
+        .json({ message: error.message || "Internal server error!" })
+        .end();
+    }
 
-    return res.status(200).json({ message: "Successfully Deleted",result:response }).end();
+    return res
+      .status(200)
+      .json({ message: "Successfully Deleted", result: response })
+      .end();
   } catch (error) {
     return res
       .status(400)

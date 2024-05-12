@@ -44,6 +44,9 @@ const PropertySchema = new Schema({
     },
     cityRef:{
         type: Schema.Types.ObjectId
+    },
+    priority:{
+        type: String
     }
 }, { timestamps: true });
 

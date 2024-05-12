@@ -16,6 +16,10 @@ const DeveloperSchema = new Schema({
     mainImgaeLink: {
         type: String,
     },
+    priority: {
+        type: String,
+    },
+    
     
     
 }, { timestamps: true });

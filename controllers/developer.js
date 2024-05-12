@@ -2,6 +2,8 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import DeveloperModel from "../model/Developer.js";
 import { deleteFile } from "../middleware/deleteFile.js";
+import Property from "../model/Property.js";
+import mongoose from "mongoose";
 
 export const create = async (req, res, next) => {
   try {
@@ -53,16 +55,18 @@ export const editById = async (req, res, next) => {
 
     if (req.files.mainImgaeLink) {
       obj.mainImgaeLink = req.files.mainImgaeLink[0].filename;
+    if(existingDeveloper?.mainImgaeLink && existingDeveloper?.mainImgaeLink?.length > 0){
       const filename = existingDeveloper.mainImgaeLink;
       const filePath = `/mainImage/${filename}`;
       try {
         await deleteFile(filePath);
       } catch (error) {
         return res
-          .status(400)
-          .json({ message: error.message || "Internal server error!" })
-          .end();
+        .status(400)
+        .json({ message: error.message || "Internal server error!" })
+        .end();
       }
+    }
     }
 
     await DeveloperModel.findByIdAndUpdate(
@@ -92,9 +96,15 @@ export const deleteById = async (req, res, next) => {
       return res.status(400).json({ message: "City Not Exist!!" }).end();
     }
 
+    const isExistingDeveloper = await Property.findOne({developerRef:new mongoose.Types.ObjectId(req.params.id)});
+
+    if(isExistingDeveloper){
+      return res.status(400).json({ message: "Already property avalible under the developer" }).end();
+    }
+
     await DeveloperModel.findByIdAndDelete(req.params.id);
 
-    if (existingDeveloper?.mainImgaeLink) {
+    if (existingDeveloper?.mainImgaeLink && existingDeveloper?.mainImgaeLink.length > 0) {
       const filename = existingDeveloper.mainImgaeLink;
       const filePath = `/mainImage/${filename}`;
       try {

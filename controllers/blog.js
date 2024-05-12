@@ -1,5 +1,3 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import BlogModel from "../model/Blog.js";
 import { deleteFile } from "../middleware/deleteFile.js";
 
@@ -66,15 +64,17 @@ export const editById = async (req, res, next) => {
     };
     if (req.files.mainImgaeLink) {
       obj.mainImgaeLink = req.files.mainImgaeLink[0].filename;
-      const filename = existingBlog.mainImgaeLink;
-      const filePath = `/mainImage/${filename}`;
-      try {
-        await deleteFile(filePath);
-      } catch (error) {
-        return res
-          .status(400)
-          .json({ message: error.message || "Internal server error!" })
-          .end();
+      if (existingBlog?.mainImgaeLink && existingBlog?.mainImgaeLink?.length > 0 ) {
+        const filename = existingBlog.mainImgaeLink;
+        const filePath = `/mainImage/${filename}`;
+        try {
+          await deleteFile(filePath);
+        } catch (error) {
+          return res
+            .status(400)
+            .json({ message: error.message || "Internal server error!" })
+            .end();
+        }
       }
     }
     await BlogModel.findByIdAndUpdate(
@@ -106,7 +106,7 @@ export const deleteById = async (req, res, next) => {
 
     await BlogModel.findByIdAndDelete(req.params.id);
 
-    if (existingBlog?.mainImgaeLink) {
+    if (existingBlog?.mainImgaeLink && existingBlog?.mainImgaeLink?.length > 0) {
       const filename = existingBlog.mainImgaeLink;
       const filePath = `/mainImage/${filename}`;
       try {
