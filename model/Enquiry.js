@@ -18,9 +18,9 @@ const enquirySchema = new Schema({
         type: String,
     },
     status: {
-        type: String,
-        enum:["pending","delivered","ontheway"],
-        default:"pending"
+        type: String,  
+        enum:["qualified","unqualified","agent","interested","progressive","closed"],
+        default:"newlead"
     },
 }, { timestamps: true });
 

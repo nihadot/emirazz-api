@@ -402,6 +402,36 @@ export const updateStatus = async (req, res, next) => {
       .end();
   }
 };
+export const updateAdsStatus = async (req, res, next) => {
+  try {
+    if (!req.body.id) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+
+    const existAccount = await Property.findById(req.body.id);
+
+    if (!existAccount) {
+      return res.status(400).json({ message: "Enquiry Not Exist!!" }).end();
+    }
+
+    await Property.findByIdAndUpdate(
+      req.body.id,
+      {
+        $set: {
+          isAds: req.body.status,
+        },
+      },
+      { new: true }
+    );
+
+    return res.status(200).json({ message: "Successfully Updated" }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
 
 export const deleteById = async (req, res, next) => {
   try {

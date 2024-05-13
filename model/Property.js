@@ -47,6 +47,10 @@ const PropertySchema = new Schema({
     },
     priority:{
         type: String
+    },
+    isAds:{
+        type:Boolean,
+        default: false,
     }
 }, { timestamps: true });
 
