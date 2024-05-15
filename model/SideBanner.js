@@ -5,6 +5,12 @@ const SideBannerSchema = new Schema(
     mainImgaeLink: {
       type: String,
     },
+    name: {
+      type: String,
+    },
+    title: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

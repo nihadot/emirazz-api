@@ -51,6 +51,9 @@ const PropertySchema = new Schema({
     isAds:{
         type:Boolean,
         default: false,
+    },
+    sideBarRef:{
+        type: Schema.Types.ObjectId
     }
 }, { timestamps: true });
 

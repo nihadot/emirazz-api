@@ -101,7 +101,6 @@ export const deleteById = async (req, res, next) => {
       const filePath = `/mainImage/${filename}`;
       try {
         const response = await deleteFile(filePath);
-        console.log(response)
       } catch (error) {
         return res
           .status(400)

@@ -50,6 +50,9 @@ export const create = async (req, res, next) => {
     if (req.body.smallImage) {
       delete req.body.smallImage;
     }
+    if(!req.body.sideBarRef) {
+      delete req.body.sideBarRef;
+    } 
     const mainImgaeLink = req.files.mainImgaeLink
       ? req.files.mainImgaeLink[0].filename
       : "";
@@ -61,6 +64,7 @@ export const create = async (req, res, next) => {
         ArraysmallImage.push(item.filename)
       );
     }
+
 
     const newProperty = new PropertyModel({
       ...req.body,
@@ -563,7 +567,6 @@ export const deleteSmallImage = async (req, res, next) => {
     const filePath = `/smallImage/${req.body.smallImage}`;
     try {
       const response = await deleteFile(filePath);
-      console.log(response);
     } catch (error) {
       return res
         .status(400)

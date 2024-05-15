@@ -10,6 +10,9 @@ const CitySchema = new Schema({
     mainImgaeLink: {
         type: String,
     },
+    priority: {
+        type: String,
+    },
 }, { timestamps: true });
 
 const City = model("City", CitySchema);
