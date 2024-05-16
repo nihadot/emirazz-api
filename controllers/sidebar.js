@@ -34,12 +34,16 @@ export const getAll = async (req, res, next) => {
     let newResultArray = []
 
     
-    for (let item of getAllPropertes) {
-      if (item.sideBarRef) {
-        const result =  getAllSideBanners.find((itm) =>itm._id+'' === item.sideBarRef+'') 
-
+    for (let item of getAllSideBanners) {
+      if (item) {
+        const result =  getAllPropertes.find((itm) =>itm.sideBarRef+'' === item._id+'') 
         if(result){
-          newResultArray.push({property:item,...result._doc}) 
+
+          if(result){
+            newResultArray.push({property:{...result._doc},...item._doc}) 
+          }
+        }else{
+          newResultArray.push({...item._doc}) 
         }
       }
     }
