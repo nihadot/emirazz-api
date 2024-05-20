@@ -1,5 +1,5 @@
 import express from 'express';
-import { create,getAll,deleteById, getAllSideBarIsNotAvailbe} from '../controllers/sidebar.js';
+import { create,getAll,deleteById, getAllSideBarIsNotAvailbe,deleteByIdUnderProperty} from '../controllers/sidebar.js';
 import { verifyAdmin } from '../middleware/verifyingToken.js';
 import { upload } from '../middleware/multer.js';
 
@@ -16,6 +16,8 @@ router.get("/not-available", getAllSideBarIsNotAvailbe)
 router.get("/", getAll)
 // DELETE SIDEBAR BY ID
 router.delete("/:id", verifyAdmin, deleteById) 
+// DELETE SIDEBAR BY ID UNDER PROPERTY ID
+router.delete("/:id/:property", verifyAdmin, deleteByIdUnderProperty) 
 
 
 export default router

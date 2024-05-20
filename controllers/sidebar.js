@@ -28,27 +28,24 @@ export const getAll = async (req, res, next) => {
   try {
     const getAllSideBanners = await SideBannerLogo.find();
 
-
     const getAllPropertes = await Property.find();
 
-    let newResultArray = []
+    let newResultArray = [];
 
-    
     for (let item of getAllSideBanners) {
       if (item) {
-        const result =  getAllPropertes.find((itm) =>itm.sideBarRef+'' === item._id+'') 
-        if(result){
-
-          if(result){
-            newResultArray.push({property:{...result._doc},...item._doc}) 
+        const result = getAllPropertes.find(
+          (itm) => itm.sideBarRef + "" === item._id + ""
+        );
+        if (result) {
+          if (result) {
+            newResultArray.push({ property: { ...result._doc }, ...item._doc });
           }
-        }else{
-          newResultArray.push({...item._doc}) 
+        } else {
+          newResultArray.push({ ...item._doc });
         }
       }
     }
-
-
 
     return res.status(200).json({ result: newResultArray }).end();
   } catch (error) {
@@ -112,6 +109,40 @@ export const getAllSideBarIsNotAvailbe = async (req, res, next) => {
     }
 
     return res.status(200).json({ result: allSidebar }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+export const deleteByIdUnderProperty = async (req, res, next) => {
+  try {
+    if (!req.params.id) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+
+    if (!req.params.property) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+
+    const existBanner = await SideBannerLogo.findById(req.params.id);
+
+    if (!existBanner) {
+      return res.status(400).json({ message: "Ads Not Exist!!" }).end();
+    }
+
+    const existProperty = await Property.findById(req.params.property);
+
+    if (!existProperty) {
+      return res.status(400).json({ message: "Property Not Exist!!" }).end();
+    }
+
+    await Property.findByIdAndUpdate(existProperty._id, { $unset: { sideBarRef: "" } });
+
+
+    return res.status(200).json({ message: "Successfully Deleted" }).end();
   } catch (error) {
     return res
       .status(400)
