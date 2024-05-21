@@ -19,6 +19,9 @@ const DeveloperSchema = new Schema({
     priority: {
         type: String,
     },
+    username: {
+        type: String,
+    },
     
     
     

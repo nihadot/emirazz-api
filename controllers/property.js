@@ -270,15 +270,9 @@ export const editById = async (req, res, next) => {
     if (req.body.areasNearBy) {
       delete req.body.areasNearBy;
     }
-    // console.log(req.body,'before')
     if (req.body.smallImage) {
       delete req.body.smallImage;
     }
-    // console.log(req.body,'after')
-    //
-
-    // console.log(req.body.smallImage)
-    // console.log(Boolean(req.body.smallImage),'boo')
 
     const obj = {
       ...req.body,

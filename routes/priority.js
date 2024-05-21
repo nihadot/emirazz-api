@@ -1,5 +1,6 @@
 import express from 'express';
-import { getAll, getAllPriorityOfCities, getAllPriorityOfDevelopers} from '../controllers/priority.js';
+import { getAll, getAllPriorityOfCities, getAllPriorityOfDevelopers,deletePriority} from '../controllers/priority.js';
+import { verifyAdmin } from '../middleware/verifyingToken.js';
 
 const router = express.Router()
 
@@ -9,6 +10,8 @@ router.get("/", getAll)
 router.get("/developers", getAllPriorityOfDevelopers)
 //  get city priority
 router.get("/city", getAllPriorityOfCities)
+// DELETE SIDEBAR BY ID UNDER PROPERTY ID
+router.delete("/:id/:type", verifyAdmin, deletePriority) 
 
 
 export default router
