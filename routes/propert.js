@@ -1,5 +1,5 @@
 import express from 'express';
-import { create,getAll,deleteById,editById,getById,createEnquiry ,getEnquiry, getCounts,addEnq,updateAdsStatus,deleteSmallImage,updateStatus} from '../controllers/property.js';
+import { create,getAll,deleteById,editById,getById,createEnquiry ,getEnquiry, getCounts,addEnq,updateAdsStatus,deleteSmallImage,updateStatus, getSearchProperty} from '../controllers/property.js';
 import { verifyAdmin, verifyToken } from '../middleware/verifyingToken.js';
 import { upload } from '../middleware/multer.js';
 
@@ -7,6 +7,7 @@ import { upload } from '../middleware/multer.js';
 const router = express.Router()
 
 
+router.get("/search", getSearchProperty) 
 // CREATE PROPERTY
 router.post("/",verifyAdmin,  upload,create)
 // GET ALL PROPERTY

@@ -50,9 +50,9 @@ export const create = async (req, res, next) => {
     if (req.body.smallImage) {
       delete req.body.smallImage;
     }
-    if(!req.body.sideBarRef) {
+    if (!req.body.sideBarRef) {
       delete req.body.sideBarRef;
-    } 
+    }
     const mainImgaeLink = req.files.mainImgaeLink
       ? req.files.mainImgaeLink[0].filename
       : "";
@@ -64,7 +64,6 @@ export const create = async (req, res, next) => {
         ArraysmallImage.push(item.filename)
       );
     }
-
 
     const newProperty = new PropertyModel({
       ...req.body,
@@ -572,6 +571,34 @@ export const deleteSmallImage = async (req, res, next) => {
       .status(200)
       .json({ message: "Successfully Deleted", result: response })
       .end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+export const getSearchProperty = async (req, res, next) => {
+  try {
+    const searchQuery = req.query.q;
+
+    // Ensure searchQuery is sanitized and valid
+    if (!searchQuery) {
+      return res.status(400).json({ message: "Invalid search query" });
+    }
+
+    if (searchQuery) {
+      const getProperties = await PropertyModel.findOne({
+        projectNo: req.query.q,
+      });
+
+      if (!getProperties) {
+        return res.status(404).json({ message: "No properties found" });
+      }
+
+      return res.status(200).json({ result: getProperties });
+    }
   } catch (error) {
     return res
       .status(400)

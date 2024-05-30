@@ -54,6 +54,9 @@ const PropertySchema = new Schema({
     },
     sideBarRef:{
         type: Schema.Types.ObjectId
+    },
+    projectNo:{
+        type:String,
     }
 }, { timestamps: true });
 
