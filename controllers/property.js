@@ -594,9 +594,15 @@ export const getSearchProperty = async (req, res, next) => {
       });
 
       if (!getProperties) {
-        return res.status(404).json({ message: "No properties found" });
-      }
+        const getProperties = await PropertyModel.findOne({
+          projectNo: "#" + req.query.q,
+        });
+        if (!getProperties) {
+          return res.status(404).json({ message: "No properties found" });
+        }
 
+        return res.status(200).json({ result: getProperties });
+      }
       return res.status(200).json({ result: getProperties });
     }
   } catch (error) {
