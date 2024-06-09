@@ -87,6 +87,12 @@ export const deletePriority = async (req, res, next) => {
       });
     }
 
+    if (req.params.type === "property") {
+      await Property.findByIdAndUpdate(req.params.id, {
+        $unset: { priority: "" },
+      });
+    }
+
     return res.status(200).json({ message: "Successfully Deleted" }).end();
   } catch (error) {
     return res
