@@ -7,6 +7,10 @@ import Property from "../model/Property.js";
 import PropertyType from "../model/PropertyType.js";
 import { deleteFile } from "../middleware/deleteFile.js";
 import Developer from "../model/Developer.js";
+import { fetchProjectsByDeveloper } from "../helpers/fetchProjectsByDeveloper.js";
+import { fetchProjectsByPropertyType } from "../helpers/fetchProjectsByPropertyType.js";
+import { fetchProjectsByCity } from "../helpers/fetchProjectsByCity.js";
+import { sortProjects } from "../helpers/sortProjects.js";
 
 export const create = async (req, res, next) => {
   try {
@@ -100,86 +104,19 @@ export const addEnq = async (req, res, next) => {
 
 export const getAll = async (req, res, next) => {
   try {
-    const pipeline = [];
-    // Match propertyType if the query parameter is provided
-    if (Boolean(req.query.propertyType && req.query.propertyTypeId)) {
-      pipeline.push({
-        $match: {
-          propertyType: {
-            $in: [new mongoose.Types.ObjectId(req.query.propertyTypeId)], // Use $in to match elements inside the array
-          },
-        },
-      });
-    }
+    const page = parseInt(req.query.page) || 1;
+    const limit = 100; 
+  
+    const items = await PropertyModel.find().skip((page - 1) * limit).limit(limit);
+    
+    const projectsWithPropertyType = await fetchProjectsByPropertyType(items,true);
+    const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
+    const projectsWithCity = await fetchProjectsByCity(projectsWithDeveloper,false);
+    const sortedProjects = sortProjects(projectsWithCity);
+    return res.status(200).json({ result: sortedProjects });
 
-    if (Boolean(req.query.developer)) {
-      pipeline.push({
-        $match: {
-          developerRef: new mongoose.Types.ObjectId(req.query.developer),
-        },
-      });
-    }
 
-    if (Boolean(req.query.cities)) {
-      pipeline.push({
-        $match: {
-          cityRef: new mongoose.Types.ObjectId(req.query.cities),
-        },
-      });
-    }
-
-    // Add other stages of your pipeline
-    pipeline.push(
-      {
-        $lookup: {
-          from: "developers",
-          localField: "developerRef",
-          foreignField: "_id",
-          as: "developerName",
-        },
-      },
-      {
-        $lookup: {
-          from: "cities",
-          localField: "cityRef",
-          foreignField: "_id",
-          as: "cityName",
-        },
-      },
-      {
-        $unwind: "$developerName",
-      },
-      {
-        $unwind: "$cityName",
-      },
-      {
-        $addFields: {
-          developerName: "$developerName.developerName",
-        },
-      },
-      {
-        $addFields: {
-          cityName: "$cityName.cityName",
-        },
-      }
-    );
-
-    const getProperties = await PropertyModel.aggregate(pipeline);
-
-    const allProperties = [];
-    for (let property of getProperties) {
-      if (property?.propertyType?.length > 0) {
-        const propertyInfo = [];
-        for (let propertyId of property?.propertyType) {
-          const propertyInfoData = await PropertyType.findById(propertyId);
-          propertyInfo.push(propertyInfoData);
-        }
-        allProperties.push({ ...property, propertyType: propertyInfo });
-      }
-    }
-
-    return res.status(200).json({ result: allProperties }).end();
-  } catch (error) {
+  }catch (error) {
     return res
       .status(400)
       .json({ message: error.message || "Internal server error!" })
@@ -612,3 +549,80 @@ export const getSearchProperty = async (req, res, next) => {
       .end();
   }
 };
+
+export const getProjectsByPropertyTypeId = async (req,res,next)=>{
+  try {
+    const id = req.params.id;
+
+    // Ensure searchQuery is sanitized and valid
+    if (!id) {
+      return res.status(400).json({ message: "Id not provided" });
+    }
+
+    const getProperties = await PropertyModel.find({"propertyType": id}).sort({"createdAt": 1});
+    const projectsWithPropertyType = await fetchProjectsByPropertyType(getProperties,true);
+    const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
+    const projectsWithCity = await fetchProjectsByCity(projectsWithDeveloper,false);
+    const sortedProjects = sortProjects(projectsWithCity);
+
+
+    return res.status(200).json({ result: sortedProjects }).end();
+  
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+}
+
+export const getProjectsByCityId = async (req,res,next)=>{
+  try {
+    const id = req.params.id;
+
+    // Ensure searchQuery is sanitized and valid
+    if (!id) {
+      return res.status(400).json({ message: "Id not provided" });
+    }
+
+    const getProperties = await PropertyModel.find({cityRef: new mongoose.Types.ObjectId(id)}).sort({"createdAt": 1});
+    const projectsWithPropertyType = await fetchProjectsByPropertyType(getProperties,true);
+    const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
+    const projectsWithCity = await fetchProjectsByCity(projectsWithDeveloper,false);
+    const sortedProjects = sortProjects(projectsWithCity);
+
+    return res.status(200).json({ result: sortedProjects }).end();
+  
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+}
+
+export const getProjectsByDevelopersId = async (req,res,next)=>{
+  try {
+    const id = req.params.id;
+
+    if (!id) {
+      return res.status(400).json({ message: "Id not provided" });
+    }
+
+    const getProperties = await PropertyModel.find({developerRef: new mongoose.Types.ObjectId(id)})
+    // .sort({"createdAt": 1});
+    const projectsWithPropertyType = await fetchProjectsByPropertyType(getProperties,true);
+    const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
+    const projectsWithCity = await fetchProjectsByCity(projectsWithDeveloper,false);
+    const sortedProjects = sortProjects(projectsWithCity);
+
+    return res.status(200).json({ result: sortedProjects }).end();
+  
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+}
+

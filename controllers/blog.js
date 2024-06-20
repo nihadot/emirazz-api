@@ -24,6 +24,10 @@ export const getAll = async (req, res, next) => {
   try {
     const getBlogs = await BlogModel.find();
 
+    getBlogs.sort((a, b) => {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+
     return res.status(200).json({ result: getBlogs }).end();
   } catch (error) {
     return res

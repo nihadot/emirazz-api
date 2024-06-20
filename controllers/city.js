@@ -1,10 +1,10 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import CityModel from "../model/City.js";
 import PropertyModel from "../model/Property.js";
 import mongoose from "mongoose";
 import { deleteFile } from "../middleware/deleteFile.js";
 import Property from "../model/Property.js";
+import { fetchCitiesAndCount } from "../helpers/fetchCitiesAndCount.js";
+import { sortProjects } from "../helpers/sortProjects.js";
 
 export const create = async (req, res, next) => {
   try {
@@ -28,17 +28,12 @@ export const create = async (req, res, next) => {
 export const getAll = async (req, res, next) => {
   try {
     const getCties = await CityModel.find();
-    let arr = [];
-    for (let city of getCties) {
-      if (city) {
-        const getCtiesCount = await PropertyModel.countDocuments({
-          cityRef: new mongoose.Types.ObjectId(city._id),
-        });
-        arr.push({ ...city._doc, count: getCtiesCount });
-      }
-    }
 
-    return res.status(200).json({ result: arr }).end();
+    const getCitiesWithCount = await fetchCitiesAndCount(getCties,true);
+
+    const sortedCities = sortProjects(getCitiesWithCount)
+
+    return res.status(200).json({ result: sortedCities }).end();
   } catch (error) {
     return res
       .status(400)
@@ -140,3 +135,28 @@ export const deleteById = async (req, res, next) => {
       .end();
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

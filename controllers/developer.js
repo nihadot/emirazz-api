@@ -4,6 +4,7 @@ import DeveloperModel from "../model/Developer.js";
 import { deleteFile } from "../middleware/deleteFile.js";
 import Property from "../model/Property.js";
 import mongoose from "mongoose";
+import { sortProjects } from "../helpers/sortProjects.js";
 
 export const create = async (req, res, next) => {
   try {
@@ -28,7 +29,9 @@ export const getAll = async (req, res, next) => {
   try {
     const getDevelopers = await DeveloperModel.find();
 
-    return res.status(200).json({ result: getDevelopers }).end();
+    const sortedDevelopers = sortProjects(getDevelopers);
+
+    return res.status(200).json({ result: sortedDevelopers }).end();
   } catch (error) {
     return res
       .status(400)
