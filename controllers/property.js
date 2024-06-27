@@ -437,7 +437,10 @@ export const getEnquiry = async (req, res, next) => {
       }
     }
 
-    return res.status(200).json({ result: newArray }).end();
+    const sortedProperties = newArray?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+
+    return res.status(200).json({ result: sortedProperties }).end();
   } catch (error) {
     return res
       .status(400)

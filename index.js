@@ -15,6 +15,7 @@ import clientLogoRouter from "./routes/clientLogo.js"
 import propertyTypeRouter from "./routes/propertyTypeRouter.js"
 import sideBannerRouter from "./routes/sideBannerRouter.js"
 import priorityRouter from "./routes/priority.js"
+import notificationRouter from "./routes/notification.js"
 
 import { connectDataBase } from './connection/index.js';
 dotenv.config();
@@ -42,6 +43,7 @@ app.use("/api/v1/client-logo",clientLogoRouter)
 app.use("/api/v1/property-type",propertyTypeRouter)
 app.use("/api/v1/sidebar",sideBannerRouter)
 app.use("/api/v1/priority",priorityRouter)
+app.use("/api/v1/notification",notificationRouter)
 app.get("/api/v1/",(req,res)=>{
   res.send(`<h1>Server is Working Fine<h1/>`)
   
