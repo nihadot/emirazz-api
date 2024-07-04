@@ -39,6 +39,10 @@ const PropertySchema = new Schema({
         type:Boolean,
         default:false
     },
+    isSold:{
+        type:Boolean,
+        default:false
+    },
     developerRef:{
         type: Schema.Types.ObjectId
     },

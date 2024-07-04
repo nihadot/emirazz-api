@@ -107,7 +107,7 @@ export const getAll = async (req, res, next) => {
     const page = parseInt(req.query.page) || 1;
     const limit = 100; 
   
-    const items = await PropertyModel.find().skip((page - 1) * limit).limit(limit);
+    const items = await PropertyModel.find({isSold:false}).skip((page - 1) * limit).limit(limit);
     
     const projectsWithPropertyType = await fetchProjectsByPropertyType(items,true);
     const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
@@ -562,7 +562,7 @@ export const getProjectsByPropertyTypeId = async (req,res,next)=>{
       return res.status(400).json({ message: "Id not provided" });
     }
 
-    const getProperties = await PropertyModel.find({"propertyType": id}).sort({"createdAt": 1});
+    const getProperties = await PropertyModel.find({"propertyType": id,isSold:false}).sort({"createdAt": 1});
     const projectsWithPropertyType = await fetchProjectsByPropertyType(getProperties,true);
     const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
     const projectsWithCity = await fetchProjectsByCity(projectsWithDeveloper,false);
@@ -588,7 +588,7 @@ export const getProjectsByCityId = async (req,res,next)=>{
       return res.status(400).json({ message: "Id not provided" });
     }
 
-    const getProperties = await PropertyModel.find({cityRef: new mongoose.Types.ObjectId(id)}).sort({"createdAt": 1});
+    const getProperties = await PropertyModel.find({cityRef: new mongoose.Types.ObjectId(id),isSold:false}).sort({"createdAt": 1});
     const projectsWithPropertyType = await fetchProjectsByPropertyType(getProperties,true);
     const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
     const projectsWithCity = await fetchProjectsByCity(projectsWithDeveloper,false);

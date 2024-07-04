@@ -28,7 +28,7 @@ export const getAll = async (req, res, next) => {
   try {
     const getAllSideBanners = await SideBannerLogo.find();
 
-    const getAllPropertes = await Property.find();
+    const getAllPropertes = await Property.find({isSold:false});
 
     let newResultArray = [];
 
@@ -99,7 +99,7 @@ export const deleteById = async (req, res, next) => {
 
 export const getAllSideBarIsNotAvailbe = async (req, res, next) => {
   try {
-    const getAllResponse = await Property.find();
+    const getAllResponse = await Property.find({isSold:false});
     // return true
     const allSidebar = [];
     for (let item of getAllResponse) {

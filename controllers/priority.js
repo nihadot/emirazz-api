@@ -5,7 +5,7 @@ import City from "../model/City.js";
 
 export const getAll = async (req, res, next) => {
   try {
-    const getProperties = await Property.find().select("+priority");
+    const getProperties = await Property.find({isSold:false}).select("+priority");
 
     // return true
     const allPriorities = [];
