@@ -11,6 +11,7 @@ import { fetchProjectsByDeveloper } from "../helpers/fetchProjectsByDeveloper.js
 import { fetchProjectsByPropertyType } from "../helpers/fetchProjectsByPropertyType.js";
 import { fetchProjectsByCity } from "../helpers/fetchProjectsByCity.js";
 import { sortProjects } from "../helpers/sortProjects.js";
+import Notification from "../model/Notification.js";
 
 export const create = async (req, res, next) => {
   try {
@@ -78,8 +79,14 @@ export const create = async (req, res, next) => {
       smallImage: ArraysmallImage,
       mainImgaeLink: mainImgaeLink,
     });
+    const newNotification = new Notification({
+      title:req.body.propretyHeadline,
+      mainImgaeLink:req.body.mainImgaeLink,
+    })
 
     const savedProperty = await newProperty.save();
+    const savedNotification = await newNotification.save();
+    
     return res.status(200).json({ result: savedProperty }).end();
   } catch (error) {
     return res
@@ -104,11 +111,17 @@ export const addEnq = async (req, res, next) => {
 
 export const getAll = async (req, res, next) => {
   try {
+
+    let isSold = false
+
+    if(req.query.issold === 'sold'){
+       isSold = true
+    }
     const page = parseInt(req.query.page) || 1;
     const limit = 100; 
   
-    const items = await PropertyModel.find({isSold:false}).skip((page - 1) * limit).limit(limit);
-    
+    const items = await PropertyModel.find({isSold:isSold}).skip((page - 1) * limit).limit(limit);
+
     const projectsWithPropertyType = await fetchProjectsByPropertyType(items,true);
     const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
     const projectsWithCity = await fetchProjectsByCity(projectsWithDeveloper,false);

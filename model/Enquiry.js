@@ -19,7 +19,7 @@ const enquirySchema = new Schema({
     },
     status: {
         type: String,  
-        enum:["qualified","unqualified","agent","interested","progressive","closed","newlead"],
+        enum:["qualified","not-interested","agent","interested","in-progress","closed","newlead","wrong-number"],
         default:"newlead"
     },
 }, { timestamps: true });

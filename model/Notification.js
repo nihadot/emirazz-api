@@ -4,9 +4,6 @@ const NotificationSchema = new Schema({
     title:{
         type:String,
     },
-    description: {
-        type: String,
-    },
     mainImgaeLink: {
         type: String,
     },
