@@ -79,9 +79,17 @@ export const create = async (req, res, next) => {
       smallImage: ArraysmallImage,
       mainImgaeLink: mainImgaeLink,
     });
+
+    const isExistDeveloper = await Developer.findById(req.body.developerRef);
+
+    if(!isExistDeveloper){
+      return res.status(400).json({ message: "Developer not found" }).end();
+    }
+
+
     const newNotification = new Notification({
-      title:req.body.propretyHeadline,
-      mainImgaeLink:req.body.mainImgaeLink,
+      title:`New project launched by ${isExistDeveloper?.developerName} Starting From ${req.body.price}`,
+      mainImgaeLink:mainImgaeLink,
     })
 
     const savedProperty = await newProperty.save();
