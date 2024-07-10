@@ -16,6 +16,7 @@ import propertyTypeRouter from "./routes/propertyTypeRouter.js"
 import sideBannerRouter from "./routes/sideBannerRouter.js"
 import priorityRouter from "./routes/priority.js"
 import notificationRouter from "./routes/notification.js"
+import agencyRouter from "./routes/agency.js"
 
 import { connectDataBase } from './connection/index.js';
 dotenv.config();
@@ -44,6 +45,7 @@ app.use("/api/v1/property-type",propertyTypeRouter)
 app.use("/api/v1/sidebar",sideBannerRouter)
 app.use("/api/v1/priority",priorityRouter)
 app.use("/api/v1/notification",notificationRouter)
+app.use("/api/v1/agency",agencyRouter)
 app.get("/api/v1/",(req,res)=>{
   res.send(`<h1>Server is Working Fine<h1/>`)
   

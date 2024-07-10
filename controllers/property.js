@@ -12,6 +12,8 @@ import { fetchProjectsByPropertyType } from "../helpers/fetchProjectsByPropertyT
 import { fetchProjectsByCity } from "../helpers/fetchProjectsByCity.js";
 import { sortProjects } from "../helpers/sortProjects.js";
 import Notification from "../model/Notification.js";
+import AssignedModel from "../model/AssigendProjects.js";
+import Agency from "../model/Agency.js";
 
 export const create = async (req, res, next) => {
   try {
@@ -446,13 +448,27 @@ export const getEnquiry = async (req, res, next) => {
 
     for (let item of newEnquiry) {
       if (item) {
-        const getProperty = await PropertyModel.findById(item.propertyId);
-        const getDeveloper = await Developer.findById(item.developerId);
+        // Fetch property and developer details concurrently
+        const [getProperty, getDeveloper] = await Promise.all([
+          PropertyModel.findById(item.propertyId),
+          Developer.findById(item.developerId)
+        ]);
+    
+        // Fetch assigned agency details if assigned exists
+        let assignedAgencyName = '';
         if (getProperty && getDeveloper) {
+          const getAssigned = await AssignedModel.findOne({ leadId: new mongoose.Types.ObjectId(item._id) });
+          if (getAssigned) {
+            const agency = await Agency.findById(getAssigned.agencyId);
+            assignedAgencyName = agency ? agency.name : ''; // Assuming 'name' is the field in AgencyModel
+          }
+    
+          // Push data to newArray
           newArray.push({
             ...item._doc,
-            propertyName: getProperty.propretyHeadline,
-            developerName: getDeveloper.developerName,
+            propertyName: getProperty ? getProperty.propretyHeadline : '',
+            developerName: getDeveloper ? getDeveloper.developerName : '',
+            assignedAgencyName: assignedAgencyName
           });
         }
       }

@@ -24,43 +24,6 @@ export const verifyToken = (req, res, next) => {
   });
 };
 
-// export const verifyAdminOrTrainerRole = (req, res, next) => {
-
-//     verifyToken(req, res, () => {
-
-//         if (req.user?.isAdmin || req.user?.isTrainer ) {
-//             next()
-//         } else {
-//             return next(createError(403, "You are not authorized!"));
-//         }
-//     })
-
-// }
-
-// export const verifyAdminOrStudentRole = (req, res, next) => {
-
-//     verifyToken(req, res, () => {
-//         if (req.user?.isAdmin || req.user?.isStudent ) {
-//             next()
-//         } else {
-//             return next(createError(403, "You are not authorized!"));
-//         }
-//     })
-
-// }
-
-// export const verifyAdminOrStudentorTrainerRole = (req, res, next) => {
-
-//     verifyToken(req, res, () => {
-//         if (req.user?.isAdmin || req.user?.isStudent || req.user?.isTrainer ) {
-//             next()
-//         } else {
-//             return next(createError(403, "You are not authorized!"));
-//         }
-//     })
-
-// }
-
 export const verifyAdmin = (req, res, next) => {
   verifyToken(req, res, () => {
     if (req.user && req.user.isAdmin) {
@@ -70,3 +33,49 @@ export const verifyAdmin = (req, res, next) => {
     }
   });
 };
+export const verifyAgency = (req, res, next) => {
+  verifyToken(req, res, () => {
+    if (req.user && req.user.isAgency) {
+      next();
+    } else {
+      return res.status(403).json({ message: "You are not authorized!" }).end();
+    }
+  });
+};
+export const verifyAdminOrAgency = (req, res, next) => {
+  verifyToken(req, res, () => {
+    if (req.user && req.user.isAgency || req.user.isAdmin) {
+      next();
+    } else {
+      return res.status(403).json({ message: "You are not authorized!" }).end();
+    }
+  });
+};
+export const verifyDeveloper = (req, res, next) => {
+  verifyToken(req, res, () => {
+    if (req.user && req.user.isDeveloper) {
+      next();
+    } else {
+      return res.status(403).json({ message: "You are not authorized!" }).end();
+    }
+  });
+};
+export const verifyAdminOrDeveloper = (req, res, next) => {
+  verifyToken(req, res, () => {
+    if (req.user && req.user.isAgency || req.user.isDeveloper) {
+      next();
+    } else {
+      return res.status(403).json({ message: "You are not authorized!" }).end();
+    }
+  });
+};
+export const verifyAdminOrAgencyOrDeveloper = (req, res, next) => {
+  verifyToken(req, res, () => {
+    if (req.user && req.user.isAgency || req.user.isDeveloper || req.user.isAdmin) {
+      next();
+    } else {
+      return res.status(403).json({ message: "You are not authorized!" }).end();
+    }
+  });
+};
+
