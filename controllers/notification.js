@@ -43,41 +43,19 @@ export const getAll = async (req, res, next) => {
 
 export const editById = async (req, res, next) => {
   try {
-    if (!req.body._id) {
+    if (!req.params.id) {
       return res.status(400).json({ message: "Id Not Provided!" }).end();
     }
 
-    const existingNotification = await NotificationModel.findById(req.body._id);
+    const existingNotification = await NotificationModel.findById(req.params.id);
 
     if (!existingNotification) {
       return res.status(400).json({ message: "Item Not Exist!!" }).end();
     }
 
-    let obj = {
-      ...req.body,
-    };
-    if (req.files.mainImgaeLink) {
-      obj.mainImgaeLink = req.files.mainImgaeLink[0].filename;
-      if (
-        existingNotification?.mainImgaeLink &&
-        existingNotification?.mainImgaeLink?.length > 0
-      ) {
-        const filename = existingNotification.mainImgaeLink;
-        const filePath = `/mainImage/${filename}`;
-        try {
-          await deleteFile(filePath);
-        } catch (error) {
-          return res
-            .status(400)
-            .json({ message: error.message || "Internal server error!" })
-            .end();
-        }
-      }
-    }
-
     await NotificationModel.findByIdAndUpdate(
-      req.body._id,
-      { $set: { ...obj } },
+      req.params.id,
+      { $set:  req.body  },
       { new: true }
     );
 
@@ -129,6 +107,21 @@ export const deleteById = async (req, res, next) => {
   }
 };
 
+
+export const getNotificationById = async (req, res, next) => {
+  try {
+    if (!req.params.id) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+    const getNotification = await NotificationModel.findById(req.params.id);
+    return res.status(200).json({ result: getNotification }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
 
 
 

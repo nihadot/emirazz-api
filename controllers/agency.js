@@ -5,19 +5,21 @@ import Property from "../model/Property.js";
 import AssignedModel from "../model/AssigendProjects.js";
 import Enquiry from "../model/Enquiry.js";
 import mongoose from "mongoose";
+import Agency from "../model/Agency.js";
+import  jwt  from "jsonwebtoken";
 
 export const createAgency = async (req, res, next) => {
   try {
-    const { email, password, name } = req.body;
+    const { username, password, name } = req.body;
 
-    if (!password || !email || !name) {
+    if (!password || !username || !name) {
       return res
         .status(400)
         .json({ message: "All fields are required!" })
         .end();
     }
 
-    const existMail = await AgencyModel.findOne({ email });
+    const existMail = await AgencyModel.findOne({ username });
 
     if (existMail) {
       return res.status(400).json({ message: "Mail-ID Exist!" }).end();
@@ -29,7 +31,7 @@ export const createAgency = async (req, res, next) => {
 
     const hash = bcrypt.hashSync(password, salt);
 
-    const newAgency = new AgencyModel({ email, password: hash, name });
+    const newAgency = new AgencyModel({ username, password: hash, name });
 
     const savedAgency = await newAgency.save();
 
@@ -163,8 +165,6 @@ export const assignedByAgency = async (req, res, next) => {
     });
 
     if (isExistAssignedLead) {
-      console.log(req.body);
-      console.log(req.body.agencyId === "none");
       if (req.body.agencyId === "none") {
         await AssignedModel.findByIdAndUpdate(isExistAssignedLead._id, {
           $unset: {
@@ -207,5 +207,47 @@ export const assignedByAgency = async (req, res, next) => {
       .status(400)
       .json({ message: error.message || "Internal server error!" })
       .end();
+  }
+};
+
+
+export const loginAgency = async (req, res, next) => {
+
+  const { username, password } = req.body;
+
+  if (!password || !username) {
+    return res.status(400).json({message:'All fields are required!'}).end();
+  }
+
+  try {
+    const existUser = await AgencyModel.findOne({ username });
+
+    if(!existUser) return res.status(400).json({message:'Agency is not founded!'}).end();
+
+    const isPassword = await bcrypt.compare(req.body.password, existUser.password);
+
+    if(!isPassword) return res.status(400).json({message:'Wrong username or password!'}).end();
+
+    const { password, isAdmin, ...otherDetails } = existUser._doc;
+
+    const accessToken = jwt.sign(
+      { id: existUser._id, isAgency: existUser.isAgency },
+      process.env.JWT_SECRET,
+      { expiresIn: "30 days" }
+    );
+
+    // res.cookie("accessToken", accessToken, {
+    //   httpOnly: true,
+    //   maxAge: 30 * 24 * 60 * 60 * 1000,
+    //   secure: true, // Ensures the cookie is sent only over HTTPS connections
+    //   sameSite: 'None' // Allows the cookie to be sent in cross-origin requests
+    // }); //30 days valid
+
+    return res.status(200).json({ result:otherDetails,token:accessToken})
+
+  } catch (error) {
+    
+    return res.status(400).json({message: error.message || 'Internal server error!'}).end();
+
   }
 };

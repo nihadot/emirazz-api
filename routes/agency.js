@@ -1,12 +1,13 @@
 import express from 'express';
-import { createAgency,getAllAgency,editAgencyById,deleteAgencyById,assignedByAgency } from '../controllers/agency.js';
+import { createAgency,getAllAgency,editAgencyById,deleteAgencyById,assignedByAgency,loginAgency } from '../controllers/agency.js';
 import { verifyAdmin, verifyAdminOrAgency } from '../middleware/verifyingToken.js';
 import { getAllAgencyById } from '../controllers/agency.js';
 
 
 const router = express.Router()
 
-
+// LOGIN AGENCY
+router.post("/login",loginAgency)
 // CREATE AGENCY
 router.post("/create-agency",verifyAdmin,createAgency)
 // GET ALL AGENCY

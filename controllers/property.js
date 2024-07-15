@@ -456,20 +456,26 @@ export const getEnquiry = async (req, res, next) => {
     
         // Fetch assigned agency details if assigned exists
         let assignedAgencyName = '';
+        let assignedAgencyId = '';
         if (getProperty && getDeveloper) {
           const getAssigned = await AssignedModel.findOne({ leadId: new mongoose.Types.ObjectId(item._id) });
           if (getAssigned) {
             const agency = await Agency.findById(getAssigned.agencyId);
             assignedAgencyName = agency ? agency.name : ''; // Assuming 'name' is the field in AgencyModel
+            assignedAgencyId = agency ? agency._id : '';
+            
           }
+            newArray.push({
+              ...item._doc,
+              propertyName: getProperty ? getProperty.propretyHeadline : '',
+              developerName: getDeveloper ? getDeveloper.developerName : '',
+              assignedAgencyName: assignedAgencyName,
+              assignedId: assignedAgencyId
+            });
+          
     
           // Push data to newArray
-          newArray.push({
-            ...item._doc,
-            propertyName: getProperty ? getProperty.propretyHeadline : '',
-            developerName: getDeveloper ? getDeveloper.developerName : '',
-            assignedAgencyName: assignedAgencyName
-          });
+         
         }
       }
     }
@@ -666,3 +672,50 @@ export const getProjectsByDevelopersId = async (req,res,next)=>{
   }
 }
 
+export const getEnquiryUnderAgency = async (req, res, next) => {
+  try {
+
+    if(!req.user.isAgency){
+      return res.status(400).json({ message: "You are not authorized!" }).end();
+    }
+
+    const isAssignedEnquiries  = await AssignedModel.find({ agencyId: new mongoose.Types.ObjectId(req.user.id) });
+
+    const newArray = [];
+
+    for (let item of isAssignedEnquiries) {
+      if (item) {
+      
+        const getLead = await Enquiry.findById(item.leadId);
+
+        if(getLead){
+
+          const [getProperty, getDeveloper] = await Promise.all([
+            PropertyModel.findById(getLead.propertyId),
+            Developer.findById(getLead.developerId)
+          ]);
+      
+          newArray.push({
+            ...getLead._doc,
+            propertyName: getProperty ? getProperty.propretyHeadline : '',
+            developerName: getDeveloper ? getDeveloper.developerName : '',
+          });
+
+
+        }
+    
+       
+      }
+    }
+
+    const sortedProperties = newArray?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+
+    return res.status(200).json({ result: sortedProperties }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};

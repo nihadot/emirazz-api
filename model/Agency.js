@@ -4,7 +4,7 @@ const AgencySchema = new Schema({
     name:{
         type:String,
     },
-    email: {
+    username: {
         type: String,
         required: true,
         unique: true,

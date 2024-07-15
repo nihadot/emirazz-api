@@ -16,8 +16,9 @@ import {
     updateStatus, 
     getSearchProperty,
     getProjectsByPropertyTypeId,
+    getEnquiryUnderAgency
 } from '../controllers/property.js';
-import { verifyAdmin, verifyToken } from '../middleware/verifyingToken.js';
+import { verifyAdmin, verifyAdminOrAgency, verifyToken } from '../middleware/verifyingToken.js';
 import { upload } from '../middleware/multer.js';
 
 
@@ -36,7 +37,8 @@ router.delete("/:id", verifyAdmin, deleteById)
 
 router.post("/form", createEnquiry) 
 router.get("/form",verifyAdmin, getEnquiry) 
-router.put("/form",verifyAdmin, updateStatus) 
+router.get("/form/agency",verifyAdminOrAgency, getEnquiryUnderAgency) 
+router.put("/form",verifyAdminOrAgency, updateStatus) 
 router.put("/ads",verifyAdmin, updateAdsStatus) 
 router.get("/counts", getCounts) 
 router.get("/:id", getById)
