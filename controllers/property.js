@@ -14,10 +14,11 @@ import { sortProjects } from "../helpers/sortProjects.js";
 import Notification from "../model/Notification.js";
 import AssignedModel from "../model/AssigendProjects.js";
 import Agency from "../model/Agency.js";
+import City from "../model/City.js";
 
 export const create = async (req, res, next) => {
   try {
-    const { propertyType, facilities, paymentPlan, areasNearBy, smallImage } =
+    const { propertyType, citiesArrayRef,facilities, paymentPlan, areasNearBy, smallImage } =
       req.body;
 
     let propertyTypeVariable;
@@ -25,10 +26,16 @@ export const create = async (req, res, next) => {
     let areasNearByVariable;
     let paymentPlanByVariable;
     let smallImageVariable;
+    let citiesArrayRefVariable;
 
     if (propertyType) {
       propertyTypeVariable = JSON.parse(req.body.propertyType);
     }
+
+    if (citiesArrayRef) {
+      citiesArrayRefVariable = JSON.parse(req.body.citiesArrayRef);
+    }
+
     if (facilities) {
       facilitiesVariable = JSON.parse(req.body.facilities);
     }
@@ -44,6 +51,9 @@ export const create = async (req, res, next) => {
 
     if (req.body.propertyType) {
       delete req.body.propertyType;
+    }
+    if(req.body.citiesArrayRefVariable){
+      delete req.body.citiesArrayRef;
     }
     if (req.body.facilities) {
       delete req.body.facilities;
@@ -74,6 +84,7 @@ export const create = async (req, res, next) => {
 
     const newProperty = new PropertyModel({
       ...req.body,
+      citiesArrayRef:citiesArrayRefVariable,
       propertyType: propertyTypeVariable,
       facilities: facilitiesVariable,
       areasNearBy: areasNearByVariable,
@@ -156,29 +167,25 @@ export const getById = async (req, res, next) => {
       {
         $match: { _id: new mongoose.Types.ObjectId(req.params.id) },
       },
-      {
-        $lookup: {
-          from: "cities",
-          localField: "cityRef",
-          foreignField: "_id",
-          as: "cityInfo",
-        },
-      },
-      {
-        $unwind: "$cityInfo",
-      },
     ]);
 
     const properties = [];
     for (let property of getProperty) {
       const propertyArray = [];
-      if (property?.propertyType.length > 0) {
+      const cityArray = [];
+      if (property?.propertyType?.length > 0) {
         for (let propertyId of property?.propertyType) {
           const propertyInfo = await PropertyType.findById(propertyId);
           propertyArray.push(propertyInfo);
         }
       }
-      properties.push({ ...property, propertyType: propertyArray });
+      if (property?.citiesArrayRef?.length > 0) {
+        for (let cityId of property?.citiesArrayRef) {
+          const cityInfo = await City.findById(cityId);
+          cityArray.push(cityInfo);
+        }
+      }
+      properties.push({ ...property, propertyType: propertyArray,citiesInfo: cityArray});
     }
     return res.status(200).json({ result: properties }).end();
   } catch (error) {
@@ -192,7 +199,7 @@ export const getById = async (req, res, next) => {
 export const editById = async (req, res, next) => {
   try {
     // --------------------------
-    const { propertyType, facilities, paymentPlan, areasNearBy, smallImage } =
+    const { propertyType,citiesArrayRef,facilities, paymentPlan, areasNearBy, smallImage } =
       req.body;
 
     let propertyTypeVariable;
@@ -200,9 +207,14 @@ export const editById = async (req, res, next) => {
     let areasNearByVariable;
     let paymentPlanByVariable;
     let smallImageVariable;
+    let citiesArrayRefVariable;
+
 
     if (propertyType) {
       propertyTypeVariable = JSON.parse(req.body.propertyType);
+    }
+    if (citiesArrayRef) {
+      citiesArrayRefVariable = JSON.parse(req.body.citiesArrayRef);
     }
     if (facilities) {
       facilitiesVariable = JSON.parse(req.body.facilities);
@@ -219,6 +231,9 @@ export const editById = async (req, res, next) => {
 
     if (req.body.propertyType) {
       delete req.body.propertyType;
+    }
+    if(req.body.citiesArrayRefVariable){
+      delete req.body.citiesArrayRef;
     }
     if (req.body.facilities) {
       delete req.body.facilities;
@@ -240,6 +255,9 @@ export const editById = async (req, res, next) => {
 
     if (propertyTypeVariable && propertyTypeVariable.length > 0) {
       obj.propertyType = propertyTypeVariable;
+    }
+    if (citiesArrayRefVariable && citiesArrayRefVariable.length > 0) {
+      obj.citiesArrayRef = citiesArrayRefVariable;
     }
     if (facilitiesVariable && facilitiesVariable.length > 0) {
       obj.facilities = facilitiesVariable;
@@ -631,7 +649,7 @@ export const getProjectsByCityId = async (req,res,next)=>{
       return res.status(400).json({ message: "Id not provided" });
     }
 
-    const getProperties = await PropertyModel.find({cityRef: new mongoose.Types.ObjectId(id),isSold:false}).sort({"createdAt": 1});
+    const getProperties = await PropertyModel.find({citiesArrayRef: new mongoose.Types.ObjectId(id),isSold:false}).sort({"createdAt": 1});
     const projectsWithPropertyType = await fetchProjectsByPropertyType(getProperties,true);
     const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
     const projectsWithCity = await fetchProjectsByCity(projectsWithDeveloper,false);
@@ -712,6 +730,37 @@ export const getEnquiryUnderAgency = async (req, res, next) => {
 
 
     return res.status(200).json({ result: sortedProperties }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+
+
+export const enqChangeNoteStatus = async (req, res, next) => {
+  try {
+    if (!req.params.id) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+
+    const existEnq = await Enquiry.findById(req.params.id);
+
+    console.log(existEnq,'existEnq')
+
+    if (!existEnq) {
+      return res.status(400).json({ message: "Enquiry Not Exist!!" }).end();
+    }
+
+    console.log(req.body)
+
+   existEnq.note = req.body.note;
+
+   await existEnq.save()
+
+    return res.status(200).json({ message: "Successfully Updated" }).end();
   } catch (error) {
     return res
       .status(400)

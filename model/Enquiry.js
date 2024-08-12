@@ -22,6 +22,9 @@ const enquirySchema = new Schema({
         enum:["qualified","not-interested","agent","interested","in-progress","closed","newlead","wrong-number"],
         default:"newlead"
     },
+    note:{
+        type: String,
+    }
 }, { timestamps: true });
 
 const Enquiry = model("Enquiry", enquirySchema);

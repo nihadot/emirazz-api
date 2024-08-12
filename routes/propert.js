@@ -16,7 +16,8 @@ import {
     updateStatus, 
     getSearchProperty,
     getProjectsByPropertyTypeId,
-    getEnquiryUnderAgency
+    getEnquiryUnderAgency,
+    enqChangeNoteStatus
 } from '../controllers/property.js';
 import { verifyAdmin, verifyAdminOrAgency, verifyToken } from '../middleware/verifyingToken.js';
 import { upload } from '../middleware/multer.js';
@@ -49,6 +50,9 @@ router.post("/small-image/:id", deleteSmallImage)
 router.get("/property-type/:id", getProjectsByPropertyTypeId) 
 router.get("/city/:id", getProjectsByCityId) 
 router.get("/developers/:id", getProjectsByDevelopersId) 
+
+router.put("/enq-change-note/:id", enqChangeNoteStatus) 
+
 
 
 export default router

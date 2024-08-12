@@ -27,9 +27,9 @@ export const create = async (req, res, next) => {
 
 export const getAll = async (req, res, next) => {
   try {
-    const getCties = await CityModel.find();
+    const getCities = await CityModel.find();
 
-    const getCitiesWithCount = await fetchCitiesAndCount(getCties,true);
+    const getCitiesWithCount = await fetchCitiesAndCount(getCities,true);
 
     const sortedCities = sortProjects(getCitiesWithCount)
 

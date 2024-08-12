@@ -46,8 +46,8 @@ const PropertySchema = new Schema({
     developerRef:{
         type: Schema.Types.ObjectId
     },
-    cityRef:{
-        type: Schema.Types.ObjectId
+    citiesArrayRef:{
+        type:[Schema.Types.ObjectId]
     },
     priority:{
         type: String
