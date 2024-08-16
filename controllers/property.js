@@ -768,3 +768,60 @@ export const enqChangeNoteStatus = async (req, res, next) => {
       .end();
   }
 };
+
+export const deleteExistingCityByPropertyIdAndCityId = async (req, res, next) => {
+  try {
+    if (!req.params.cityId) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+    if (!req.params.propertyId) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+  
+    const existProperty = await PropertyModel.findById(req.params.propertyId);
+
+    existProperty.citiesArrayRef.pull(req.params.cityId);
+    await existProperty.save();
+
+    if (!existProperty) {
+      return res.status(400).json({ message: "Property Not Exist!!" }).end();
+    }
+
+
+    return res.status(200).json({ message: "Successfully Deleted" }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+
+export const deleteExistingPropertyTypeByPropertyIdAndPropertyTypeId = async (req, res, next) => {
+  try {
+    if (!req.params.propertyTypeId) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+    if (!req.params.propertyId) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+  
+    const existProperty = await PropertyModel.findById(req.params.propertyId);
+
+    existProperty.propertyType.pull(req.params.propertyTypeId);
+    await existProperty.save();
+
+    if (!existProperty) {
+      return res.status(400).json({ message: "Property Not Exist!!" }).end();
+    }
+
+
+    return res.status(200).json({ message: "Successfully Deleted" }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};

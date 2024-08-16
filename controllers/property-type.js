@@ -44,6 +44,22 @@ export const getAll = async (req, res, next) => {
   }
 };
 
+export const getAllPropertyType = async (req, res, next) => {
+  try {
+    const getProperties = await PropertyType.find();
+
+  
+    return res.status(200).json({ result: getProperties }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+
+
 export const getById = async (req, res, next) => {
   try {
     if (!req.params.id) {

@@ -17,7 +17,9 @@ import {
     getSearchProperty,
     getProjectsByPropertyTypeId,
     getEnquiryUnderAgency,
-    enqChangeNoteStatus
+    enqChangeNoteStatus,
+    deleteExistingCityByPropertyIdAndCityId,
+    deleteExistingPropertyTypeByPropertyIdAndPropertyTypeId
 } from '../controllers/property.js';
 import { verifyAdmin, verifyAdminOrAgency, verifyToken } from '../middleware/verifyingToken.js';
 import { upload } from '../middleware/multer.js';
@@ -53,6 +55,8 @@ router.get("/developers/:id", getProjectsByDevelopersId)
 
 router.put("/enq-change-note/:id", enqChangeNoteStatus) 
 
+router.delete("/delete-existing-city/:cityId/:propertyId", deleteExistingCityByPropertyIdAndCityId) 
+router.delete("/delete-existing-property-type/:propertyTypeId/:propertyId", deleteExistingPropertyTypeByPropertyIdAndPropertyTypeId) 
 
 
 export default router
