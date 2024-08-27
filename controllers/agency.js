@@ -25,13 +25,8 @@ export const createAgency = async (req, res, next) => {
       return res.status(400).json({ message: "Mail-ID Exist!" }).end();
     }
 
-    const saltRounds = 10;
 
-    const salt = bcrypt.genSaltSync(saltRounds);
-
-    const hash = bcrypt.hashSync(password, salt);
-
-    const newAgency = new AgencyModel({ username, password: hash, name });
+    const newAgency = new AgencyModel({ username, password, name });
 
     const savedAgency = await newAgency.save();
 
@@ -70,7 +65,7 @@ export const getAllAgencyById = async (req, res, next) => {
 
     const getAgencies = await AgencyModel.findById(req.params.id);
 
-    const { password, ...otherDetails } = getAgencies._doc;
+    const {  ...otherDetails } = getAgencies._doc;
 
     const user = {
       ...otherDetails,
@@ -99,12 +94,6 @@ export const editAgencyById = async (req, res, next) => {
 
     const updateData = { ...req.body };
 
-    if (req.body.password) {
-      const saltRounds = 10;
-      const salt = bcrypt.genSaltSync(saltRounds);
-      const hash = bcrypt.hashSync(req.body.password, salt);
-      updateData.password = hash;
-    }
 
     const data = await AgencyModel.findByIdAndUpdate(
       req.params.id, // Ensure 'id' matches your route parameter
@@ -220,15 +209,13 @@ export const loginAgency = async (req, res, next) => {
   }
 
   try {
-    const existUser = await AgencyModel.findOne({ username });
+    const existUser = await AgencyModel.findOne({ username,password });
 
     if(!existUser) return res.status(400).json({message:'Agency is not founded!'}).end();
 
-    const isPassword = await bcrypt.compare(req.body.password, existUser.password);
+  
 
-    if(!isPassword) return res.status(400).json({message:'Wrong username or password!'}).end();
-
-    const { password, isAdmin, ...otherDetails } = existUser._doc;
+    const { isAdmin, ...otherDetails } = existUser._doc;
 
     const accessToken = jwt.sign(
       { id: existUser._id, isAgency: existUser.isAgency },
