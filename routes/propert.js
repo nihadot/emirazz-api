@@ -19,7 +19,8 @@ import {
     getEnquiryUnderAgency,
     enqChangeNoteStatus,
     deleteExistingCityByPropertyIdAndCityId,
-    deleteExistingPropertyTypeByPropertyIdAndPropertyTypeId
+    deleteExistingPropertyTypeByPropertyIdAndPropertyTypeId,
+    updateToggleLock
 } from '../controllers/property.js';
 import { verifyAdmin, verifyAdminOrAgency, verifyToken } from '../middleware/verifyingToken.js';
 import { upload } from '../middleware/multer.js';
@@ -54,9 +55,10 @@ router.get("/city/:id", getProjectsByCityId)
 router.get("/developers/:id", getProjectsByDevelopersId) 
 
 router.put("/enq-change-note/:id", enqChangeNoteStatus) 
+router.put("/enq-change-note/:id", enqChangeNoteStatus) 
 
 router.delete("/delete-existing-city/:cityId/:propertyId", deleteExistingCityByPropertyIdAndCityId) 
-router.delete("/delete-existing-property-type/:propertyTypeId/:propertyId", deleteExistingPropertyTypeByPropertyIdAndPropertyTypeId) 
+router.put("/enq-toggle-lock/:lockStatus/:enquiryId", updateToggleLock) 
 
 
 export default router

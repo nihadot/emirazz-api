@@ -464,6 +464,8 @@ export const getEnquiry = async (req, res, next) => {
 
     const newArray = [];
 
+    // console.log(newEnquiry)
+
     for (let item of newEnquiry) {
       if (item) {
         // Fetch property and developer details concurrently
@@ -582,6 +584,7 @@ export const deleteSmallImage = async (req, res, next) => {
 
 export const getSearchProperty = async (req, res, next) => {
   try {
+
     const searchQuery = req.query.q;
 
     // Ensure searchQuery is sanitized and valid
@@ -589,23 +592,23 @@ export const getSearchProperty = async (req, res, next) => {
       return res.status(400).json({ message: "Invalid search query" });
     }
 
-    if (searchQuery) {
-      const getProperties = await PropertyModel.findOne({
-        projectNo: req.query.q,
-      });
+    const regex = new RegExp(searchQuery, 'i'); // Case-insensitive regex
 
-      if (!getProperties) {
-        const getProperties = await PropertyModel.findOne({
-          projectNo: "#" + req.query.q,
-        });
-        if (!getProperties) {
-          return res.status(404).json({ message: "No properties found" });
-        }
 
-        return res.status(200).json({ result: getProperties });
-      }
+      const getProperties = await PropertyModel.find({
+        $or:[
+          { propretyHeadline:regex },
+          {price:regex},
+          {beds:searchQuery},
+          {address:regex},
+          {description:regex},
+          {areasNearBy:{$in:[regex]}},
+          {handoverDate:{$gte:new Date(searchQuery)}},
+        ]
+      })
+
       return res.status(200).json({ result: getProperties });
-    }
+      
   } catch (error) {
     return res
       .status(400)
@@ -748,13 +751,13 @@ export const enqChangeNoteStatus = async (req, res, next) => {
 
     const existEnq = await Enquiry.findById(req.params.id);
 
-    console.log(existEnq,'existEnq')
+    // console.log(existEnq,'existEnq')
 
     if (!existEnq) {
       return res.status(400).json({ message: "Enquiry Not Exist!!" }).end();
     }
 
-    console.log(req.body)
+    // console.log(req.body)
 
    existEnq.note = req.body.note;
 
@@ -818,6 +821,37 @@ export const deleteExistingPropertyTypeByPropertyIdAndPropertyTypeId = async (re
 
 
     return res.status(200).json({ message: "Successfully Deleted" }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+
+
+export const updateToggleLock = async (req, res, next) => {
+  try {
+
+    // console.log(req.params)
+    if (!req.params.lockStatus && !req.params.enquiryId) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+
+    const existEnq = await Enquiry.findById(req.params.enquiryId);
+
+    if (!existEnq) {
+      return res.status(400).json({ message: "Enquiry Not Exist!!" }).end();
+    }
+
+console.log(existEnq.isLocked,'existEnq.isLocked')
+console.log(req.params.lockStatus)
+    existEnq.isLocked = req.params.lockStatus === 'lock' ? true : false;
+
+    await existEnq.save()
+
+    return res.status(200).json({ message: "Successfully Updated" }).end();
   } catch (error) {
     return res
       .status(400)

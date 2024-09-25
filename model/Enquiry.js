@@ -24,6 +24,10 @@ const enquirySchema = new Schema({
     },
     note:{
         type: String,
+    },
+    isLocked:{
+        type:Boolean,
+        default:false
     }
 }, { timestamps: true });
 
