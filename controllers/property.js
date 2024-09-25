@@ -582,9 +582,45 @@ export const deleteSmallImage = async (req, res, next) => {
   }
 };
 
+// export const getSearchProperty = async (req, res, next) => {
+//   try {
+
+//     const searchQuery = req.query.q;
+
+//     // Ensure searchQuery is sanitized and valid
+//     if (!searchQuery) {
+//       return res.status(400).json({ message: "Invalid search query" });
+//     }
+
+//     const regex = new RegExp(searchQuery, 'i'); // Case-insensitive regex
+
+
+//       const getProperties = await PropertyModel.find({
+//         $or:[
+//           { propretyHeadline:regex },
+//           {price:regex},
+//           {beds:searchQuery},
+//           {address:regex},
+//           {description:regex},
+//           {areasNearBy:{$in:[regex]}},
+//           {handoverDate:{$gte:new Date(searchQuery)}},
+//         ]
+//       })
+
+//       return res.status(200).json({ result: getProperties });
+
+//   } catch (error) {
+//     return res
+//       .status(400)
+//       .json({ message: error.message || "Internal server error!" })
+//       .end();
+//   }
+// };
+
+
+
 export const getSearchProperty = async (req, res, next) => {
   try {
-
     const searchQuery = req.query.q;
 
     // Ensure searchQuery is sanitized and valid
@@ -592,28 +628,55 @@ export const getSearchProperty = async (req, res, next) => {
       return res.status(400).json({ message: "Invalid search query" });
     }
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = 100; 
+
     const regex = new RegExp(searchQuery, 'i'); // Case-insensitive regex
 
+    // Initialize a dynamic query object
+    const query = {
+      $or: [
+        { propretyHeadline: regex },
+        { price: regex },
+        { beds: searchQuery },
+        { address: regex },
+        { description: regex },
+        { areasNearBy: { $in: [regex] } },
+        { handoverDate: { $gte: new Date(searchQuery) } },
+      ]
+    };
 
-      const getProperties = await PropertyModel.find({
-        $or:[
-          { propretyHeadline:regex },
-          {price:regex},
-          {beds:searchQuery},
-          {address:regex},
-          {description:regex},
-          {areasNearBy:{$in:[regex]}},
-          {handoverDate:{$gte:new Date(searchQuery)}},
-        ]
-      })
+    // Check if search is for a city or property type
+    const city =await City.findOne({ cityName: regex },{ _id: 1 });
+    const propertyType = await PropertyType.findOne({ name: regex },{ _id: 1 });
 
-      return res.status(200).json({ result: getProperties });
-      
+    if (city) {
+      query.$or.push({ citiesArrayRef: city._id });
+    }
+
+    if (propertyType) {
+      query.$or.push({ propertyType: propertyType._id });
+    }
+
+
+
+    // Perform the optimized query
+    const getProperties = await PropertyModel.find(query).skip((page - 1) * limit).limit(limit);
+    
+    if (!getProperties || getProperties.length === 0) {
+      return res.status(404).json({ message: "No properties found" });
+    }
+
+    const projectsWithPropertyType = await fetchProjectsByPropertyType(getProperties,true);
+    const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
+    const projectsWithCity = await fetchProjectsByCity(projectsWithDeveloper,false);
+    const sortedProjects = sortProjects(projectsWithCity);
+
+
+    return res.status(200).json({ result: sortedProjects });
+
   } catch (error) {
-    return res
-      .status(400)
-      .json({ message: error.message || "Internal server error!" })
-      .end();
+    return res.status(400).json({ message: error.message || "Internal server error!" }).end();
   }
 };
 
