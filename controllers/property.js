@@ -16,97 +16,75 @@ import AssignedModel from "../model/AssigendProjects.js";
 import Agency from "../model/Agency.js";
 import City from "../model/City.js";
 
+import Joi from "joi";
+
+// Validation schema for required fields
+const addingProject = Joi.object({
+  projectTitle: Joi.string().min(3).max(50).required(), // Title must be between 3-100 characters
+  priceInAED: Joi.string().required(), // Ensure price is numeric (as string)
+  handoverDate: Joi.date().iso().required(), // ISO date format
+  beds: Joi.string().required(), // Ensure beds are numeric (as string)
+  propertyType: Joi.array().items(Joi.string()).min(1).required(), // At least one property type
+  cities: Joi.array().items(Joi.string()).min(1).required(),
+  developer: Joi.string().required(), // MongoDB ObjectID validation
+  imageFile: Joi.object().required(), // Image file is required,
+  address:Joi.string().allow(''),
+  adsOptions: Joi.string().allow(''), //
+  description: Joi.string().allow(''), //
+  draft:Joi.boolean().allow(''), //
+  facilities : Joi.array().allow(''), //
+  imageFiles : Joi.array().allow(''), //
+  isChecked : Joi.boolean().allow(''), //
+  mapLink : Joi.string().allow(''), //
+  nearbyAreas : Joi.array().allow(''),
+  paymentOptions: Joi.array().allow(''),
+  priority: Joi.number().allow(''), //
+  projectVideo: Joi.string().allow(''),
+  projectNumber : Joi.string().allow(''),
+  // adsOptions: Joi.string().required(), // MongoDB ObjectID validation
+
+});
+
+
 export const create = async (req, res, next) => {
   try {
-    const { propertyType, citiesArrayRef,facilities, paymentPlan, areasNearBy, smallImage } =
-      req.body;
 
-    let propertyTypeVariable;
-    let facilitiesVariable;
-    let areasNearByVariable;
-    let paymentPlanByVariable;
-    let smallImageVariable;
-    let citiesArrayRefVariable;
+  
+      // Validate request body
+      const { error, value } = addingProject.validate(req.body, {
+        abortEarly: false,
+      });
 
-    if (propertyType) {
-      propertyTypeVariable = JSON.parse(req.body.propertyType);
-    }
-
-    if (citiesArrayRef) {
-      citiesArrayRefVariable = JSON.parse(req.body.citiesArrayRef);
-    }
-
-    if (facilities) {
-      facilitiesVariable = JSON.parse(req.body.facilities);
-    }
-    if (paymentPlan) {
-      paymentPlanByVariable = JSON.parse(req.body.paymentPlan);
-    }
-    if (areasNearBy) {
-      areasNearByVariable = JSON.parse(req.body.areasNearBy);
-    }
-    if (smallImage) {
-      smallImageVariable = JSON.parse(req.body.smallImage);
-    }
-
-    if (req.body.propertyType) {
-      delete req.body.propertyType;
-    }
-    if(req.body.citiesArrayRefVariable){
-      delete req.body.citiesArrayRef;
-    }
-    if (req.body.facilities) {
-      delete req.body.facilities;
-    }
-    if (req.body.paymentPlan) {
-      delete req.body.paymentPlan;
-    }
-    if (req.body.areasNearBy) {
-      delete req.body.areasNearBy;
-    }
-    if (req.body.smallImage) {
-      delete req.body.smallImage;
-    }
-    if (!req.body.sideBarRef) {
-      delete req.body.sideBarRef;
-    }
-    const mainImgaeLink = req.files.mainImgaeLink
-      ? req.files.mainImgaeLink[0].filename
-      : "";
-
-    let ArraysmallImage = [];
-
-    if (req.files.smallImage && req.files.smallImage.length > 0) {
-      Array.from(req.files.smallImage).forEach((item) =>
-        ArraysmallImage.push(item.filename)
-      );
-    }
-
-    const newProperty = new PropertyModel({
-      ...req.body,
-      citiesArrayRef:citiesArrayRefVariable,
-      propertyType: propertyTypeVariable,
-      facilities: facilitiesVariable,
-      areasNearBy: areasNearByVariable,
-      paymentPlan: paymentPlanByVariable,
-      smallImage: ArraysmallImage,
-      mainImgaeLink: mainImgaeLink,
-    });
-
-    const isExistDeveloper = await Developer.findById(req.body.developerRef);
-
-    if(!isExistDeveloper){
-      return res.status(400).json({ message: "Developer not found" }).end();
-    }
+      if (error) {
+        return res.status(400).json({
+          message: "Validation error " + error.details.map((err) => err.message),
+        });
+      }
 
 
-    const newNotification = new Notification({
-      title:`New project launched by ${isExistDeveloper?.developerName} Starting From ${req.body.price}`,
-      mainImgaeLink:mainImgaeLink,
-    })
+      if(value.priority){
+        value.priorityExists = true;
+       }
+    
+    const newProperty = new PropertyModel(value);
+
+    // if(!req.body.developer){
+    //   return res.status(200).json({ message: 'Developer not found' });
+    // }
+    // const isExistDeveloper = await Developer.findById(req.body.developer);
+
+    // if(!isExistDeveloper){
+    //   return res.status(400).json({ message: "Developer not found" }).end();
+    // }
+
+
+    // const newNotification = new Notification({
+    //   title:`New project launched by ${isExistDeveloper?.developerName} Starting From ${req.body.priceInAED}`,
+    //   imageFile:req.body.imageFile
+    // })
 
     const savedProperty = await newProperty.save();
-    const savedNotification = await newNotification.save();
+    // const savedNotification = await newNotification.save();
     
     return res.status(200).json({ result: savedProperty }).end();
   } catch (error) {
@@ -133,20 +111,106 @@ export const addEnq = async (req, res, next) => {
 export const getAll = async (req, res, next) => {
   try {
 
-    let isSold = false
+    console.log(req.query)
 
-    if(req.query.issold === 'sold'){
+    let isSold = false
+    let draft = false
+    let search = req.query.search;
+
+    if(req.query.issold === 'true'){
        isSold = true
     }
+
+
+    if(req.query.draft === 'true'){
+      draft = true
+   }
     const page = parseInt(req.query.page) || 1;
     const limit = 100; 
-  
-    const items = await PropertyModel.find({isSold:isSold}).skip((page - 1) * limit).limit(limit);
 
-    const projectsWithPropertyType = await fetchProjectsByPropertyType(items,true);
-    const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
-    const projectsWithCity = await fetchProjectsByCity(projectsWithDeveloper,false);
-    const sortedProjects = sortProjects(projectsWithCity);
+    const matchConditions = {
+      isSold: isSold,
+      draft: draft,
+    };
+
+    if (search) {
+      matchConditions.projectTitle = search;
+    }
+
+  
+    // const items = await PropertyModel.find({isSold:isSold}).skip((page - 1) * limit).limit(limit);
+
+    const items = await PropertyModel.aggregate([
+      {
+        $match: matchConditions, // Combine all match conditions
+      },
+      {
+        $set: {
+          cities: {
+            $map: {
+              input: "$cities", // The array of string IDs
+              as: "cityId",     // Temporary variable for each element
+              in: { $toObjectId: "$$cityId" } // Convert each string to ObjectId
+            }
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: "cities", // Name of the related collection
+          localField: "cities", // The converted ObjectId array
+          foreignField: "_id", // Field in the `cities` collection to match
+          as: "cityDetails" // Output array with matched documents
+        }
+      },
+      {
+        $set: {
+          developer: { $toObjectId: "$developer" } // Convert the `developer` string to ObjectId
+        }
+      },
+      {
+        $lookup: {
+          from: "developers", // Name of the related collection
+          localField: "developer", // The converted ObjectId
+          foreignField: "_id", // Field in the `developers` collection to match
+          as: "developerDetails" // Output array with matched documents
+        }
+      },
+      {
+        $unwind: "$developerDetails" // Ensure developer details are a single object
+      },
+      {
+        $set: {
+          adsOptions: { $cond: { if: { $not: "$adsOptions" }, then: null, else: { $toObjectId: "$adsOptions" } } } // Convert the `adsOptions` string to ObjectId if present
+        }
+      },
+      
+      {
+        $lookup: {
+          from: "sidebannerlogos", // Name of the related collection
+          localField: "adsOptions", // The converted ObjectId
+          foreignField: "_id", // Field in the `sidebannerlogos` collection to match
+          as: "adsDetails" // Output array with matched documents
+        }
+      },
+      {
+        $unwind: {
+          path: "$adsDetails",
+          preserveNullAndEmptyArrays: true // Include documents without adsDetails
+        }
+      }
+    ]).skip((page - 1) * limit).limit(limit);
+    
+
+    // const projectsWithPropertyType = await fetchProjectsByPropertyType(items,true);
+    // const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
+    // const projectsWithCity = await fetchProjectsByCity(projectsWithDeveloper,false);
+
+
+    
+    
+    const sortedProjects = sortProjects(items);
+    // console.log(sortedProjects,'sortedProjects')
     return res.status(200).json({ result: sortedProjects });
 
 
@@ -163,31 +227,75 @@ export const getById = async (req, res, next) => {
     if (!req.params.id) {
       return res.status(400).json({ message: "id not Provided" });
     }
-    const getProperty = await PropertyModel.aggregate([
-      {
-        $match: { _id: new mongoose.Types.ObjectId(req.params.id) },
-      },
-    ]);
+  
 
-    const properties = [];
-    for (let property of getProperty) {
-      const propertyArray = [];
-      const cityArray = [];
-      if (property?.propertyType?.length > 0) {
-        for (let propertyId of property?.propertyType) {
-          const propertyInfo = await PropertyType.findById(propertyId);
-          propertyArray.push(propertyInfo);
+
+    const items = await PropertyModel.aggregate([
+      {
+        $match:{
+          _id: new mongoose.Types.ObjectId(req.params.id),
+        }
+      },
+  
+      {
+        $set: {
+          cities: {
+            $map: {
+              input: "$cities", // The array of string IDs
+              as: "cityId",     // Temporary variable for each element
+              in: { $toObjectId: "$$cityId" } // Convert each string to ObjectId
+            }
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: "cities", // Name of the related collection
+          localField: "cities", // The converted ObjectId array
+          foreignField: "_id", // Field in the `cities` collection to match
+          as: "cityDetails" // Output array with matched documents
+        }
+      },
+      {
+        $set: {
+          developer: { $toObjectId: "$developer" } // Convert the `developer` string to ObjectId
+        }
+      },
+      {
+        $lookup: {
+          from: "developers", // Name of the related collection
+          localField: "developer", // The converted ObjectId
+          foreignField: "_id", // Field in the `developers` collection to match
+          as: "developerDetails" // Output array with matched documents
+        }
+      },
+      {
+        $unwind: "$developerDetails" // Ensure developer details are a single object
+      },
+      {
+        $set: {
+          adsOptions: { $cond: { if: { $not: "$adsOptions" }, then: null, else: { $toObjectId: "$adsOptions" } } } // Convert the `adsOptions` string to ObjectId if present
+        }
+      },
+      {
+        $lookup: {
+          from: "sidebannerlogos", // Name of the related collection
+          localField: "adsOptions", // The converted ObjectId
+          foreignField: "_id", // Field in the `sidebannerlogos` collection to match
+          as: "adsDetails" // Output array with matched documents
+        }
+      },
+      {
+        $unwind: {
+          path: "$adsDetails",
+          preserveNullAndEmptyArrays: true // Include documents without adsDetails
         }
       }
-      if (property?.citiesArrayRef?.length > 0) {
-        for (let cityId of property?.citiesArrayRef) {
-          const cityInfo = await City.findById(cityId);
-          cityArray.push(cityInfo);
-        }
-      }
-      properties.push({ ...property, propertyType: propertyArray,citiesInfo: cityArray});
-    }
-    return res.status(200).json({ result: properties }).end();
+    ])
+    
+
+
+    return res.status(200).json({ result: items }).end();
   } catch (error) {
     return res
       .status(400)
@@ -447,7 +555,29 @@ export const deleteById = async (req, res, next) => {
 
 export const createEnquiry = async (req, res, next) => {
   try {
-    const newEnquiry = new Enquiry(req.body);
+    console.log(req.body,'created')
+
+    if(!req.body.name || !req.body.number || !req.body.propertyId){
+      return res.status(400).json({ message: "All fields are required!" }).end();
+    }
+
+
+    const IsProperty = await PropertyModel.findById(req.body.propertyId);
+
+    if(!IsProperty){
+      return res.status(400).json({ message: "Property Not Found!" }).end();
+    }
+
+    const obj = {
+      name: req.body.name,
+      number: req.body.number,
+      projectId: req.body.projectId,
+      propertyId: req.body.propertyId,
+      developerId: IsProperty.developer+''
+    }
+
+    console.log(obj,'obj')
+    const newEnquiry = new Enquiry(obj);
     const saveEnquiry = await newEnquiry.save();
     return res.status(200).json({ result: saveEnquiry }).end();
   } catch (error) {
@@ -460,50 +590,110 @@ export const createEnquiry = async (req, res, next) => {
 
 export const getEnquiry = async (req, res, next) => {
   try {
-    const newEnquiry = await Enquiry.find();
 
-    const newArray = [];
+    // const items = await Enquiry.aggregate([
+    //   {
+    //     $set: {
+    //       developerId: { $toObjectId: "$developerId" } // Convert the `developer` string to ObjectId
+    //     }
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "developers", // Name of the related collection
+    //       localField: "developer", // The converted ObjectId
+    //       foreignField: "_id", // Field in the `developers` collection to match
+    //       as: "developerDetails" // Output array with matched documents
+    //     }
+    //   },
+    //   {
+    //     $unwind: "$developerDetails" // Ensure developer details are a single object
+    //   },
+    //   {
+    //     $set: {
+    //       developerDetails: { $cond: { if: { $not: "$developerDetails" }, then: null, else: { $toObjectId: "$developerDetails" } } } // Convert the `adsOptions` string to ObjectId if present
+    //     }
+    //   },
+     
 
-    // console.log(newEnquiry)
 
-    for (let item of newEnquiry) {
-      if (item) {
-        // Fetch property and developer details concurrently
-        const [getProperty, getDeveloper] = await Promise.all([
-          PropertyModel.findById(item.propertyId),
-          Developer.findById(item.developerId)
-        ]);
-    
-        // Fetch assigned agency details if assigned exists
-        let assignedAgencyName = '';
-        let assignedAgencyId = '';
-        if (getProperty && getDeveloper) {
-          const getAssigned = await AssignedModel.findOne({ leadId: new mongoose.Types.ObjectId(item._id) });
-          if (getAssigned) {
-            const agency = await Agency.findById(getAssigned.agencyId);
-            assignedAgencyName = agency ? agency.name : ''; // Assuming 'name' is the field in AgencyModel
-            assignedAgencyId = agency ? agency._id : '';
-            
-          }
-            newArray.push({
-              ...item._doc,
-              propertyName: getProperty ? getProperty.propretyHeadline : '',
-              developerName: getDeveloper ? getDeveloper.developerName : '',
-              assignedAgencyName: assignedAgencyName,
-              assignedId: assignedAgencyId
-            });
-          
-    
-          // Push data to newArray
-         
+    //   {
+    //     $set: {
+    //       propertyId: { $toObjectId: "$propertyId" } // Convert the `developer` string to ObjectId
+    //     }
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "properties", // Name of the related collection
+    //       localField: "propertyId", // The converted ObjectId
+    //       foreignField: "_id", // Field in the `developers` collection to match
+    //       as: "propertyDetails" // Output array with matched documents
+    //     }
+    //   },
+    //   {
+    //     $unwind: "$propertyDetails" // Ensure developer details are a single object
+    //   },
+    //   {
+    //     $set: {
+    //       propertyId: { $cond: { if: { $not: "$propertyId" }, then: null, else: { $toObjectId: "$propertyId" } } } // Convert the `adsOptions` string to ObjectId if present
+    //     }
+    //   },
+     
+    // ])
+
+
+    const items = await Enquiry.aggregate([
+      {
+        $set: {
+          developerId: { $toObjectId: "$developerId" } // Convert the `developer` string to ObjectId
         }
-      }
-    }
+      },
+      {
+        $lookup: {
+          from: "developers", // Name of the related collection
+          localField: "developerId", // The converted ObjectId
+          foreignField: "_id", // Field in the `developers` collection to match
+          as: "developerDetails" // Output array with matched documents
+        }
+      },
+      {
+        $unwind: "$developerDetails" // Ensure developer details are a single object
+      },
+      // {
+      //   $set: {
+      //     developerDetails: { $cond: { if: { $not: "$developerDetails" }, then: null, else: { $toObjectId: "$developerDetails" } } } // Convert the `adsOptions` string to ObjectId if present
+      //   }
+      // },
+     
 
-    const sortedProperties = newArray?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      {
+        $set: {
+          propertyId: { $toObjectId: "$propertyId" } // Convert the `developer` string to ObjectId
+        }
+      },
+      {
+        $lookup: {
+          from: "properties", // Name of the related collection
+          localField: "propertyId", // The converted ObjectId
+          foreignField: "_id", // Field in the `developers` collection to match
+          as: "propertyDetails" // Output array with matched documents
+        }
+      },
+      {
+        $unwind: "$propertyDetails" // Ensure developer details are a single object
+      },
+      // {
+      //   $set: {
+      //     propertyId: { $cond: { if: { $not: "$propertyId" }, then: null, else: { $toObjectId: "$propertyId" } } } // Convert the `adsOptions` string to ObjectId if present
+      //   }
+      // },
+     
+    ])
+    
 
 
-    return res.status(200).json({ result: sortedProperties }).end();
+
+    return res.status(200).json({ result: items }).end();
   } catch (error) {
     return res
       .status(400)
@@ -624,54 +814,120 @@ export const getSearchProperty = async (req, res, next) => {
     const searchQuery = req.query.q;
 
     // Ensure searchQuery is sanitized and valid
-    if (!searchQuery) {
-      return res.status(400).json({ message: "Invalid search query" });
-    }
+    console.log(searchQuery,'searchQuery')
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = 100; 
 
-    const regex = new RegExp(searchQuery, 'i'); // Case-insensitive regex
-
-    // Initialize a dynamic query object
-    const query = {
-      $or: [
-        { propretyHeadline: regex },
-        { price: regex },
-        { beds: searchQuery },
-        { address: regex },
-        { description: regex },
-        { areasNearBy: { $in: [regex] } },
-        { handoverDate: { $gte: new Date(searchQuery) } },
-      ]
-    };
 
     // Check if search is for a city or property type
-    const city =await City.findOne({ cityName: regex },{ _id: 1 });
-    const propertyType = await PropertyType.findOne({ name: regex },{ _id: 1 });
+    // const city =await City.findOne({ cityName: searchQuery },{ _id: 1 });
+    // const propertyType = await Developer.findOne({ developerName: regex },{ _id: 1 });
 
-    if (city) {
-      query.$or.push({ citiesArrayRef: city._id });
-    }
 
-    if (propertyType) {
-      query.$or.push({ propertyType: propertyType._id });
-    }
+    // console.log(city,propertyType,'-0-')
+    // if (city) {
+    //   query.$or.push({ citiesArrayRef: city._id });
+    // }
 
+    // if (propertyType) {
+    //   query.$or.push({ propertyType: propertyType._id });
+    // }
+
+    // const searchResult = await PropertyModel.find({
+    //   $or: [
+    //     { projectTitle: { $regex: searchQuery, $options: 'i' } }, // Match query in the "name" field
+    //   ],
+    // });
+
+
+    // const searchResult = await PropertyModel.aggregate([
+    //   {
+    //     $match: {
+    //       $or: [
+    //         { projectTitle: { $regex: searchQuery, $options: 'i' } }, // Match query in the "projectTitle" field
+    //       ],
+    //     },
+    //   },
+    // ]);
+
+
+    const items = await PropertyModel.aggregate([
+      {
+        $match: {
+          $or: [
+            { projectTitle: { $regex: searchQuery, $options: 'i' } }, // Match query in the "projectTitle" field
+          ],
+        },
+      },
+      {
+        $set: {
+          cities: {
+            $map: {
+              input: "$cities", // The array of string IDs
+              as: "cityId",     // Temporary variable for each element
+              in: { $toObjectId: "$$cityId" } // Convert each string to ObjectId
+            }
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: "cities", // Name of the related collection
+          localField: "cities", // The converted ObjectId array
+          foreignField: "_id", // Field in the `cities` collection to match
+          as: "cityDetails" // Output array with matched documents
+        }
+      },
+      {
+        $set: {
+          developer: { $toObjectId: "$developer" } // Convert the `developer` string to ObjectId
+        }
+      },
+      {
+        $lookup: {
+          from: "developers", // Name of the related collection
+          localField: "developer", // The converted ObjectId
+          foreignField: "_id", // Field in the `developers` collection to match
+          as: "developerDetails" // Output array with matched documents
+        }
+      },
+      {
+        $unwind: "$developerDetails" // Ensure developer details are a single object
+      },
+      {
+        $set: {
+          adsOptions: { $cond: { if: { $not: "$adsOptions" }, then: null, else: { $toObjectId: "$adsOptions" } } } // Convert the `adsOptions` string to ObjectId if present
+        }
+      },
+      
+      {
+        $lookup: {
+          from: "sidebannerlogos", // Name of the related collection
+          localField: "adsOptions", // The converted ObjectId
+          foreignField: "_id", // Field in the `sidebannerlogos` collection to match
+          as: "adsDetails" // Output array with matched documents
+        }
+      },
+      {
+        $unwind: {
+          path: "$adsDetails",
+          preserveNullAndEmptyArrays: true // Include documents without adsDetails
+        }
+      }
+    ]);
+    
 
 
     // Perform the optimized query
-    const getProperties = await PropertyModel.find(query).skip((page - 1) * limit).limit(limit);
-    
-    if (!getProperties || getProperties.length === 0) {
-      return res.status(404).json({ message: "No properties found" });
-    }
+    // const getProperties = await PropertyModel.find(query).skip((page - 1) * limit).limit(limit);
+    // 
+    // if (!getProperties || getProperties.length === 0) {
+    //   return res.status(404).json({ message: "No properties found" });
+    // }
 
-    const projectsWithPropertyType = await fetchProjectsByPropertyType(getProperties,true);
-    const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
-    const projectsWithCity = await fetchProjectsByCity(projectsWithDeveloper,false);
-    const sortedProjects = sortProjects(projectsWithCity);
-
+    // const projectsWithPropertyType = await fetchProjectsByPropertyType(getProperties,true);
+    // const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
+    // const projectsWithCity = await fetchProjectsByCity(projectsWithDeveloper,false);
+    const sortedProjects = sortProjects(items);
 
     return res.status(200).json({ result: sortedProjects });
 
@@ -680,31 +936,99 @@ export const getSearchProperty = async (req, res, next) => {
   }
 };
 
-export const getProjectsByPropertyTypeId = async (req,res,next)=>{
+export const getProjectsByPropertyTypeId = async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const name = req.params.name;
 
-    // Ensure searchQuery is sanitized and valid
-    if (!id) {
-      return res.status(400).json({ message: "Id not provided" });
+    if (!name) {
+      return res.status(400).json({ message: "Property type not provided" });
     }
 
-    const getProperties = await PropertyModel.find({"propertyType": id,isSold:false}).sort({"createdAt": 1});
-    const projectsWithPropertyType = await fetchProjectsByPropertyType(getProperties,true);
-    const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
-    const projectsWithCity = await fetchProjectsByCity(projectsWithDeveloper,false);
-    const sortedProjects = sortProjects(projectsWithCity);
+    const page = parseInt(req.query.page) || 1;
+    const limit = 100;
 
+    const matchConditions = {
+      isSold: false,
+      draft: false,
+      propertyType: { $in: [name] }, // Match if `name` exists in the `propertyType` array
+    };
 
-    return res.status(200).json({ result: sortedProjects }).end();
-  
+    const items = await PropertyModel.aggregate([
+      {
+        $match: matchConditions, // Match documents with the specified conditions
+      },
+      {
+        $set: {
+          cities: {
+            $map: {
+              input: "$cities", // The array of city IDs
+              as: "cityId",
+              in: { $toObjectId: "$$cityId" }, // Convert string IDs to ObjectId
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "cities", // Name of the `cities` collection
+          localField: "cities", // Field in the current collection
+          foreignField: "_id", // Field in the `cities` collection
+          as: "cityDetails", // Output field for joined data
+        },
+      },
+      {
+        $set: {
+          developer: { $toObjectId: "$developer" }, // Convert the `developer` field to ObjectId
+        },
+      },
+      {
+        $lookup: {
+          from: "developers", // Name of the `developers` collection
+          localField: "developer", // Field in the current collection
+          foreignField: "_id", // Field in the `developers` collection
+          as: "developerDetails", // Output field for joined data
+        },
+      },
+      {
+        $unwind: "$developerDetails", // Ensure `developerDetails` is a single object
+      },
+      {
+        $set: {
+          adsOptions: {
+            $cond: {
+              if: { $not: "$adsOptions" },
+              then: null,
+              else: { $toObjectId: "$adsOptions" }, // Convert `adsOptions` to ObjectId if present
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "sidebannerlogos", // Name of the `sidebannerlogos` collection
+          localField: "adsOptions", // Field in the current collection
+          foreignField: "_id", // Field in the `sidebannerlogos` collection
+          as: "adsDetails", // Output field for joined data
+        },
+      },
+      {
+        $unwind: {
+          path: "$adsDetails",
+          preserveNullAndEmptyArrays: true, // Include documents even if `adsDetails` is null
+        },
+      },
+    ])
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    return res.status(200).json({ result: items });
   } catch (error) {
     return res
       .status(400)
-      .json({ message: error.message || "Internal server error!" })
-      .end();
+      .json({ message: error.message || "Internal server error!" });
   }
-}
+};
+
 
 export const getProjectsByCityId = async (req,res,next)=>{
   try {
@@ -714,12 +1038,78 @@ export const getProjectsByCityId = async (req,res,next)=>{
     if (!id) {
       return res.status(400).json({ message: "Id not provided" });
     }
+      // Query the Property model to check if the cityId exists in the cities array
+      // const matchingProjects = await Property.find({ cities: id });
 
-    const getProperties = await PropertyModel.find({citiesArrayRef: new mongoose.Types.ObjectId(id),isSold:false}).sort({"createdAt": 1});
-    const projectsWithPropertyType = await fetchProjectsByPropertyType(getProperties,true);
-    const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
-    const projectsWithCity = await fetchProjectsByCity(projectsWithDeveloper,false);
-    const sortedProjects = sortProjects(projectsWithCity);
+
+      const items = await Property.aggregate([
+        {
+          $match: {
+            cities: id
+          }, // Combine all match conditions
+        },
+        {
+          $set: {
+            cities: {
+              $map: {
+                input: "$cities", // The array of string IDs
+                as: "cityId",     // Temporary variable for each element
+                in: { $toObjectId: "$$cityId" } // Convert each string to ObjectId
+              }
+            }
+          }
+        },
+        {
+          $lookup: {
+            from: "cities", // Name of the related collection
+            localField: "cities", // The converted ObjectId array
+            foreignField: "_id", // Field in the `cities` collection to match
+            as: "cityDetails" // Output array with matched documents
+          }
+        },
+        {
+          $set: {
+            developer: { $toObjectId: "$developer" } // Convert the `developer` string to ObjectId
+          }
+        },
+        {
+          $lookup: {
+            from: "developers", // Name of the related collection
+            localField: "developer", // The converted ObjectId
+            foreignField: "_id", // Field in the `developers` collection to match
+            as: "developerDetails" // Output array with matched documents
+          }
+        },
+        {
+          $unwind: "$developerDetails" // Ensure developer details are a single object
+        },
+        {
+          $set: {
+            adsOptions: { $cond: { if: { $not: "$adsOptions" }, then: null, else: { $toObjectId: "$adsOptions" } } } // Convert the `adsOptions` string to ObjectId if present
+          }
+        },
+        {
+          $lookup: {
+            from: "sidebannerlogos", // Name of the related collection
+            localField: "adsOptions", // The converted ObjectId
+            foreignField: "_id", // Field in the `sidebannerlogos` collection to match
+            as: "adsDetails" // Output array with matched documents
+          }
+        },
+        {
+          $unwind: {
+            path: "$adsDetails",
+            preserveNullAndEmptyArrays: true // Include documents without adsDetails
+          }
+        }
+      ])
+    
+      
+    // const getProperties = await PropertyModel.find({citiesArrayRef: new mongoose.Types.ObjectId(id),isSold:false}).sort({"createdAt": 1});
+    // const projectsWithPropertyType = await fetchProjectsByPropertyType(getProperties,true);
+    // const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
+    // const projectsWithCity = await fetchProjectsByCity(projectsWithDeveloper,false);
+    const sortedProjects = sortProjects(items);
 
     return res.status(200).json({ result: sortedProjects }).end();
   
@@ -739,12 +1129,78 @@ export const getProjectsByDevelopersId = async (req,res,next)=>{
       return res.status(400).json({ message: "Id not provided" });
     }
 
-    const getProperties = await PropertyModel.find({developerRef: new mongoose.Types.ObjectId(id)})
+    // Convert the developerId string to an ObjectId
+    const developerObjectId = new mongoose.Types.ObjectId(id);
+
+    const items = await Property.aggregate([
+   
+      {
+        $match: {
+          developer: developerObjectId
+        }, // Combine all match conditions
+      },
+      {
+        $set: {
+          cities: {
+            $map: {
+              input: "$cities", // The array of string IDs
+              as: "cityId",     // Temporary variable for each element
+              in: { $toObjectId: "$$cityId" } // Convert each string to ObjectId
+            }
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: "cities", // Name of the related collection
+          localField: "cities", // The converted ObjectId array
+          foreignField: "_id", // Field in the `cities` collection to match
+          as: "cityDetails" // Output array with matched documents
+        }
+      },
+      {
+        $set: {
+          developer: { $toObjectId: "$developer" } // Convert the `developer` string to ObjectId
+        }
+      },
+      {
+        $lookup: {
+          from: "developers", // Name of the related collection
+          localField: "developer", // The converted ObjectId
+          foreignField: "_id", // Field in the `developers` collection to match
+          as: "developerDetails" // Output array with matched documents
+        }
+      },
+      {
+        $unwind: "$developerDetails" // Ensure developer details are a single object
+      },
+      {
+        $set: {
+          adsOptions: { $cond: { if: { $not: "$adsOptions" }, then: null, else: { $toObjectId: "$adsOptions" } } } // Convert the `adsOptions` string to ObjectId if present
+        }
+      },
+      {
+        $lookup: {
+          from: "sidebannerlogos", // Name of the related collection
+          localField: "adsOptions", // The converted ObjectId
+          foreignField: "_id", // Field in the `sidebannerlogos` collection to match
+          as: "adsDetails" // Output array with matched documents
+        }
+      },
+      {
+        $unwind: {
+          path: "$adsDetails",
+          preserveNullAndEmptyArrays: true // Include documents without adsDetails
+        }
+      }
+    ])
+
+    // const getProperties = await PropertyModel.find({developerRef: new mongoose.Types.ObjectId(id)})
     // .sort({"createdAt": 1});
-    const projectsWithPropertyType = await fetchProjectsByPropertyType(getProperties,true);
-    const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
-    const projectsWithCity = await fetchProjectsByCity(projectsWithDeveloper,false);
-    const sortedProjects = sortProjects(projectsWithCity);
+    // const projectsWithPropertyType = await fetchProjectsByPropertyType(getProperties,true);
+    // const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
+    // const projectsWithCity = await fetchProjectsByCity(projectsWithDeveloper,false);
+    const sortedProjects = sortProjects(items);
 
     return res.status(200).json({ result: sortedProjects }).end();
   
@@ -922,3 +1378,409 @@ console.log(req.params.lockStatus)
       .end();
   }
 };
+
+
+
+
+// Validation schema for required fields
+const updateDetails = Joi.object({
+  projectTitle: Joi.string().min(3).max(50).required(), // Title must be between 3-100 characters
+  priceInAED: Joi.string().required(), // Ensure price is numeric (as string)
+  handoverDate: Joi.date().iso().required(), // ISO date format
+  beds: Joi.string().required(), // Ensure beds are numeric (as string)
+  address:Joi.string().allow(''),
+  adsOptions: Joi.string().allow(''), //
+  description: Joi.string().allow(''), //
+  draft:Joi.boolean().allow(''), //
+  isChecked : Joi.boolean().allow(''), //
+  mapLink  : Joi.string().allow(''), //
+  projectVideo: Joi.string().allow(''),
+  projectNumber : Joi.string().allow('')
+});
+
+export const updateProjectBasicDetails = async (req, res, next) => {
+  try {
+
+    // console.log(req.body)
+    // return true
+    // console.log(req.params)
+    if (!req.params.id ) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+
+    const isProperty = await PropertyModel.findById(req.params.id);
+
+    console.log(isProperty,'isProperty')
+    // return true
+    if (!isProperty) {
+      return res.status(400).json({ message: "Property Not Exist!!" }).end();
+    }
+
+    console.log(req.body,'req.body')
+
+    const isUpdated = await PropertyModel.findByIdAndUpdate(req.params.id,{$set:req.body});
+
+   console.log(isUpdated)
+
+    return res.status(200).json({ message: "Successfully Updated" }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+
+
+
+export const updatePropertyImage = async (req, res, next) => {
+  try {
+
+    // console.log(req.params)
+    // console.log(req.body);
+    // return true
+    // console.log(req.params)
+    if (!req.params.id ) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+
+    const isProperty = await PropertyModel.findById(req.params.id);
+
+    // console.log(isProperty,'isProperty')
+    // return true
+    if (!isProperty) {
+      return res.status(400).json({ message: "Property Not Exist!!" }).end();
+    }
+
+    const obj = {};
+
+// Check and add fields dynamically
+if (req.body.imageFile) {
+  obj.imageFile = req.body.imageFile; // Add imageFile to obj
+  const isUpdated = await PropertyModel.findByIdAndUpdate(
+    req.params.id,
+    { $set: {imageFile:req.body.imageFile} }, // Use dynamically built obj
+    { new: true } // Return the updated document
+  );
+}
+
+if (req.body.imageFiles) {
+  obj.imageFiles = req.body.imageFiles; // Add imageFiles to obj
+  isProperty.imageFiles.push(...req.body.imageFiles);
+  await isProperty.save(obj);
+}
+
+
+    return res.status(200).json({ message: "Successfully Updated" }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+
+export const deleteProjectByIdImage = async (req, res, next) => {
+  try {
+    const { id } = req.params; // Get the property ID
+    const { image } = req.body; // Get the image object from the request body
+
+    if (!id) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+
+    if (!image || !image.asset_id) {
+      return res.status(400).json({ message: "Image details not provided!" }).end();
+    }
+
+    // Find and update the property by removing the image from the imageFiles array
+    const updatedProperty = await Property.findByIdAndUpdate(
+      id,
+      {
+        $pull: { imageFiles: { asset_id: image.asset_id } }, // Remove the image with the matching asset_id
+      },
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedProperty) {
+      return res.status(404).json({ message: "Property not found!" }).end();
+    }
+
+    return res.status(200).json({
+      message: "Image successfully deleted",
+      updatedProperty, // Optional: Return the updated property details
+    }).end();
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+
+
+
+export const updateOtherOptions = async (req, res, next) => {
+  try {
+    const { id } = req.params; // Get the property ID
+
+    // console.log(req.body,'body')
+    // return true;
+    if (!id) {
+      return res.status(400).json({ message: "Id Not Provided!" });
+    }
+
+
+    console.log(req.body,'body')
+    // return true
+    // Find the property by ID
+    const isProperty = await PropertyModel.findById(id);
+
+    if (!isProperty) {
+      return res.status(400).json({ message: "Property Not Exist!!" });
+    }
+
+    let updated = false;
+
+    // Update cities if provided
+    if (req.body.cities && req.body.cities.length > 0) {
+      const citiesToAdd = req.body.cities.filter(city => !isProperty.cities.includes(city));
+      if (citiesToAdd.length > 0) {
+        isProperty.cities.push(...citiesToAdd);
+        updated = true;
+      }
+    }
+
+    // Update property types if provided
+    if (req.body.propertyType && req.body.propertyType.length > 0) {
+      const propertyTypesToAdd = req.body.propertyType.filter(type => !isProperty.propertyType.includes(type));
+      console.log(propertyTypesToAdd);
+      // console.log(isProperty.propertyType,'propertyType');
+      // return true;
+      if (propertyTypesToAdd.length > 0) {
+        isProperty.propertyType.push(...propertyTypesToAdd);
+        updated = true;
+      }
+    }
+
+    // Update developer if provided
+    if (req.body.developer) {
+      isProperty.developer = req.body.developer;
+      updated = true;
+    }
+
+    if (
+      req.body.priority !== undefined ||
+      req.body.facilities !== undefined ||
+      req.body.paymentOptions !== undefined ||
+      req.body.nearbyAreas !== undefined ||
+      req.body.draft !== undefined ||
+      req.body.isSold !== undefined
+    ) {
+      const obj = {};
+    
+      // Add fields conditionally
+      if (req.body.priority !== undefined) {
+        obj.priority = req.body.priority;
+        obj.priorityExists = true; // Add an extra field for priority
+      }
+    
+      if (req.body.facilities !== undefined) {
+        obj.facilities = req.body.facilities;
+      }
+    
+      if (req.body.paymentOptions !== undefined) {
+        obj.paymentOptions = req.body.paymentOptions;
+      }
+    
+      if (req.body.nearbyAreas !== undefined) {
+        obj.nearbyAreas = req.body.nearbyAreas;
+      }
+    
+      if (req.body.draft !== undefined) {
+        obj.draft = req.body.draft;
+      }
+    
+      if (req.body.isSold !== undefined) {
+        obj.isSold = req.body.isSold;
+      }
+    
+      // Update the document in MongoDB
+      await PropertyModel.findByIdAndUpdate(id, { $set: { ...obj } });
+    }
+   
+    // If any update was made, save the property
+    if (updated) {
+      await isProperty.save();
+    }
+
+
+
+    return res.status(200).json({
+      message: "Successfully updated",
+    });
+  } catch (error) {
+    console.error(error); // Optional: For debugging
+    return res.status(500).json({ message: error.message || "Internal server error!" });
+  }
+};
+
+
+
+
+export const deleteCityFromProjectById = async (req, res, next) => {
+  try {
+    const { projectId,cityId } = req.params; // Get the property ID
+    if (!projectId || !cityId) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+
+    const isProperty = await PropertyModel.findById(projectId);
+
+    if (!isProperty) {
+      return res.status(400).json({ message: "Property Not Exist!!" }).end();
+    }
+
+    if(isProperty.cities.length === 1){
+      return res.status(400).json({ message: "You can't delete the last city!!" }).end();
+    }
+
+    const isPulled = await PropertyModel.findByIdAndUpdate(projectId,{$pull:{cities:cityId}});
+
+if(!isPulled){
+  return res.status(400).json({ message: "City Not Exist!!" }).end();
+}
+    
+    return res.status(200).json({
+      message: "Successfully deleted",
+    }).end();
+
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+
+export const deletePropertyTypeFromProjectById = async (req, res, next) => {
+  try {
+    const { projectId,typeId } = req.params; // Get the property ID
+    if (!projectId || !typeId) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+
+    const isProperty = await PropertyModel.findById(projectId);
+
+    // console.log(isProperty,'isProperty')
+    // return true
+    if (!isProperty) {
+      return res.status(400).json({ message: "Property Not Exist!!" }).end();
+    }
+
+    if(isProperty.propertyType.length === 1){
+      return res.status(400).json({ message: "You can't delete the last property type!!" }).end();
+    }
+
+    const isPulled = await PropertyModel.findByIdAndUpdate(projectId,{$pull:{propertyType: typeId}});
+
+if(!isPulled){
+  return res.status(400).json({ message: "City Not Exist!!" }).end();
+}
+    
+    return res.status(200).json({
+      message: "Successfully deleted",
+    }).end();
+
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+
+
+export const deletePriorityFromProjectById = async (req, res, next) => {
+  try {
+    const { projectId,item } = req.params; // Get the property ID
+    if (!projectId || !item) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+
+    const isProperty = await PropertyModel.findById(projectId);
+
+    // console.log(isProperty,'isProperty')
+    // return true
+    if (!isProperty) {
+      return res.status(400).json({ message: "Property Not Exist!!" }).end();
+    }
+
+   if(!(isProperty && isProperty.priority)) return res.status(404).json({ message: "Property Priority Not Exist!!" }).end();
+    
+    const result = await PropertyModel.findByIdAndUpdate(projectId,{$set:{priorityExists:false},$unset: {priority:''} });
+
+    if(!result){
+      return res.status(400).json({ message: "Priority Not Exist!!" }).end();
+    }
+  return res.status(200).json({
+    message: "Successfully deleted",
+  }).end(); 
+
+    
+
+
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+
+
+export const deleteAdsFromProjectById = async (req, res, next) => {
+  try {
+    const { projectId } = req.params; // Get the property ID
+    if (!projectId ) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+
+    const isProperty = await PropertyModel.findById(projectId);
+
+    // console.log(isProperty,'isProperty')
+    // return true
+    if (!isProperty) {
+      return res.status(400).json({ message: "Property Not Exist!!" }).end();
+    }
+
+   if(!(isProperty && isProperty.adsOptions)) return res.status(404).json({ message: "Property Ads Not Exist!!" }).end();
+    
+    const result = await PropertyModel.findByIdAndUpdate(projectId,{$unset: { adsOptions:''} });
+
+    if(!result){
+      return res.status(400).json({ message: "Priority Not Exist!!" }).end();
+    }
+  return res.status(200).json({
+    message: "Successfully deleted",
+  }).end(); 
+
+    
+
+
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+
+

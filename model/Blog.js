@@ -7,8 +7,13 @@ const BlogSchema = new Schema({
     blogTitle: {
         type: String,
     },
-    mainImgaeLink: {
-        type: String,
+    imageFile: {
+    
+            asset_id: { type: String },
+            secure_url: { type: String },
+            url: { type: String },
+            public_id: { type: String },
+        
     },
     date: {
         type: Date,

@@ -8,14 +8,14 @@ const router = express.Router()
 
 
 // CREATE PROPERTY
-router.post("/",verifyAdmin,upload,create)
+router.post("/",verifyAdmin,create)
 // GET ALL PROPERTY
 router.get("/", getAll)
 // GET BY ID
 router.get("/get-one/:id",getById)
 
 // UPDATE PROPERTY BY ID
-router.put("/", verifyAdmin,upload,editById)
+router.put("/:id", verifyAdmin,upload,editById)
 // DELETE PROPERTY BY ID
 router.delete("/:id", verifyAdmin, deleteById) 
 

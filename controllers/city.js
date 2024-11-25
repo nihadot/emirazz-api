@@ -1,39 +1,90 @@
-import CityModel from "../model/City.js";
+import CityModel, { addingCityValidationSchema } from "../model/City.js";
 import PropertyModel from "../model/Property.js";
 import mongoose from "mongoose";
 import { deleteFile } from "../middleware/deleteFile.js";
 import Property from "../model/Property.js";
 import { fetchCitiesAndCount } from "../helpers/fetchCitiesAndCount.js";
 import { sortProjects } from "../helpers/sortProjects.js";
+import City from "../model/City.js";
 
 export const create = async (req, res, next) => {
   try {
-    const mainImgaeLink = req.files.mainImgaeLink
-      ? req.files.mainImgaeLink[0].filename
-      : "";
-    const newCity = new CityModel({
-      ...req.body,
-      mainImgaeLink: mainImgaeLink,
+    // Validate request body
+    const { error, value } = addingCityValidationSchema.validate(req.body, {
+      abortEarly: false,
     });
+
+    if (error) {
+      return res.status(400).json({
+        message: "Validation error",
+        details: error.details.map((err) => err.message),
+      });
+    }
+
+    if(value.priority){
+     value.priorityExists = true;
+    }
+
+    // Create a new city using the validated data
+    const newCity = new City(value);
     const savedCity = await newCity.save();
-    return res.status(200).json({ result: savedCity }).end();
-  } catch (error) {
+
+    return res.status(200).json({ result: savedCity });
+  } catch (err) {
+    console.error("Error creating city:", err);
     return res
-      .status(400)
-      .json({ message: error.message || "Internal server error!" })
-      .end();
+      .status(500)
+      .json({ message: err.message || "Internal server error" });
   }
 };
 
 export const getAll = async (req, res, next) => {
   try {
-    const getCities = await CityModel.find();
+   
+     // Using aggregate to first sort by priority, and then by creation date
+    //  const getCities = await CityModel.aggregate([
+    //   {
+    //     $sort: {
+    //       priority: 1,      // Sort by priority in ascending order (1, 2, 3, ...)
+    //       createdAt: -1,     // Then sort by createdAt timestamp (most recent first)
+    //     },
+    //   },
+    // ]);
 
-    const getCitiesWithCount = await fetchCitiesAndCount(getCities,true);
 
-    const sortedCities = sortProjects(getCitiesWithCount)
+    const result = await CityModel.aggregate([
+      {
+        $lookup: {
+          from: "properties", // Property collection
+          let: { cityId: { $toString: "$_id" } }, // Convert City _id to string
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $in: ["$$cityId", "$cities"], // Check if the cityId exists in the cities array
+                },
+              },
+            },
+          ],
+          as: "matchingProperties", // Alias for joined data
+        },
+      },
+      {
+        $addFields: {
+          propertyCount: { $size: "$matchingProperties" }, // Count matching properties
+        },
+      },
+  
+    ]);
+  
+  
+  
 
-    return res.status(200).json({ result: sortedCities }).end();
+    // const getCitiesWithCount = await fetchCitiesAndCount(getCities,true);
+
+    const sortedCities = sortProjects(result)
+
+    return res.status(200).json({ result:  sortedCities }).end();
   } catch (error) {
     return res
       .status(400)
@@ -44,41 +95,42 @@ export const getAll = async (req, res, next) => {
 
 export const editById = async (req, res, next) => {
   try {
-    if (!req.body._id) {
+    if (!req.params.id) {
       return res.status(400).json({ message: "Id Not Provided!" }).end();
     }
 
-    const existingCity = await CityModel.findById(req.body._id);
+    const existingCity = await CityModel.findById(req.params.id);
 
     if (!existingCity) {
       return res.status(400).json({ message: "City Not Exist!!" }).end();
     }
 
-    let obj = {
-      ...req.body,
+
+    let data = {
+      emirateName : req.body.emirateName,
+      cityName : req.body.cityName,
     };
-    if (req.files.mainImgaeLink) {
-      obj.mainImgaeLink = req.files.mainImgaeLink[0].filename;
-      if (
-        existingCity?.mainImgaeLink &&
-        existingCity?.mainImgaeLink?.length > 0
-      ) {
-        const filename = existingCity.mainImgaeLink;
-        const filePath = `/mainImage/${filename}`;
-        try {
-          await deleteFile(filePath);
-        } catch (error) {
-          return res
-            .status(400)
-            .json({ message: error.message || "Internal server error!" })
-            .end();
-        }
-      }
+
+    if(req.body.priority){
+      data.priorityExists = true;
+      data.priority = req.body.priority;
+    }else{
+      data.priorityExists = false;
+      data.priority = null;
     }
 
+    
+    const toCOnvertString = Object.keys(req.body.imageFile).length > 0 && true;
+    // console.log(toCOnvertString,'ss')
+    // return true
+
+    if(toCOnvertString){
+      data.imageFile = req.body.imageFile;
+    }
+ 
     await CityModel.findByIdAndUpdate(
-      req.body._id,
-      { $set: { ...obj } },
+      req.params.id,
+      { $set: { ...data } },
       { new: true }
     );
 
@@ -103,7 +155,7 @@ export const deleteById = async (req, res, next) => {
       return res.status(400).json({ message: "City Not Exist!!" }).end();
     }
 
-    const isExistingCity = await Property.findOne({cityRef:new mongoose.Types.ObjectId(req.params.id)});
+    const isExistingCity = await Property.findOne({cities:new mongoose.Types.ObjectId(req.params.id)});
 
     if(isExistingCity){
       return res.status(400).json({ message: "Already property avalible under the city" }).end();
@@ -111,21 +163,6 @@ export const deleteById = async (req, res, next) => {
 
     await CityModel.findByIdAndDelete(req.params.id);
 
-    if (
-      existingCity?.mainImgaeLink &&
-      existingCity?.mainImgaeLink?.length > 0
-    ) {
-      const filename = existingCity.mainImgaeLink;
-      const filePath = `/mainImage/${filename}`;
-      try {
-        const response = await deleteFile(filePath);
-      } catch (error) {
-        return res
-          .status(400)
-          .json({ message: error.message || "Internal server error!" })
-          .end();
-      }
-    }
 
     return res.status(200).json({ message: "Successfully Deleted" }).end();
   } catch (error) {
@@ -138,6 +175,26 @@ export const deleteById = async (req, res, next) => {
 
 
 
+
+export const getById = async (req, res, next) => {
+  try {
+   
+    if (!req.params.id) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+
+
+     // Using aggregate to first sort by priority, and then by creation date
+     const getCity = await CityModel.findById(req.params.id);
+
+    return res.status(200).json({ result:  getCity }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
 
 
 

@@ -4,8 +4,8 @@ const NotificationSchema = new Schema({
     title:{
         type:String,
     },
-    mainImgaeLink: {
-        type: String,
+    imageFile: {
+        type: Object,
     },
 }, { timestamps: true });
 

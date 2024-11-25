@@ -20,7 +20,15 @@ import {
     enqChangeNoteStatus,
     deleteExistingCityByPropertyIdAndCityId,
     deleteExistingPropertyTypeByPropertyIdAndPropertyTypeId,
-    updateToggleLock
+    updateToggleLock,
+    updateProjectBasicDetails,
+    updatePropertyImage,
+    deleteProjectByIdImage,
+    updateOtherOptions,
+    deleteCityFromProjectById,
+    deletePropertyTypeFromProjectById,
+    deletePriorityFromProjectById,
+    deleteAdsFromProjectById
 } from '../controllers/property.js';
 import { verifyAdmin, verifyAdminOrAgency, verifyToken } from '../middleware/verifyingToken.js';
 import { upload } from '../middleware/multer.js';
@@ -31,7 +39,7 @@ const router = express.Router()
 
 router.get("/search", getSearchProperty) 
 // CREATE PROPERTY
-router.post("/",verifyAdmin,  upload,create)
+router.post("/",verifyAdmin,create)
 // GET ALL PROPERTY
 router.get("/", getAll)
 // UPDATE PROPERTY BY ID
@@ -50,7 +58,7 @@ router.get("/:id", getById)
 router.post("/enq", addEnq) 
 router.post("/small-image/:id", deleteSmallImage) 
 
-router.get("/property-type/:id", getProjectsByPropertyTypeId) 
+router.get("/property-type/:name", getProjectsByPropertyTypeId) 
 router.get("/city/:id", getProjectsByCityId) 
 router.get("/developers/:id", getProjectsByDevelopersId) 
 
@@ -59,6 +67,15 @@ router.put("/enq-change-note/:id", enqChangeNoteStatus)
 
 router.delete("/delete-existing-city/:cityId/:propertyId", deleteExistingCityByPropertyIdAndCityId) 
 router.put("/enq-toggle-lock/:lockStatus/:enquiryId", updateToggleLock) 
+router.put("/details/:id",verifyAdmin, updateProjectBasicDetails) 
+router.delete("/delete-image/:id",verifyAdmin, deleteProjectByIdImage) ;
+
+router.put("/image/:id",verifyAdmin, updatePropertyImage); 
+router.put("/update-other-options/:id",verifyAdmin, updateOtherOptions); 
+router.delete("/city/delete/:projectId/:cityId",verifyAdmin, deleteCityFromProjectById); 
+router.delete("/property-type/delete/:projectId/:typeId",verifyAdmin, deletePropertyTypeFromProjectById); 
+router.delete("/delete/priority/:projectId/:item",verifyAdmin, deletePriorityFromProjectById);
+router.delete("/delete/ads/:projectId",verifyAdmin, deleteAdsFromProjectById);
 
 
 export default router

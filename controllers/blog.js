@@ -3,13 +3,25 @@ import { deleteFile } from "../middleware/deleteFile.js";
 
 export const create = async (req, res, next) => {
   try {
-    const mainImgaeLink = req.files.mainImgaeLink
-      ? req.files.mainImgaeLink[0].filename
-      : "";
-    const newBlog = new BlogModel({
-      ...req.body,
-      mainImgaeLink: mainImgaeLink,
-    });
+ 
+    if(!req.body.blogTitle){
+     return res.status(400).json({ message: "Blog Title is required" });
+    }
+
+    if(!req.body.blogBody){
+      return res.status(400).json({ message: "Blog Body is required" });
+    }
+
+    if(!req.body.date){
+      return res.status(400).json({ message: "Date is required" });
+    }
+
+    if(!req.body.imageFile){
+      return res.status(400).json({ message: "Image file is required" });
+    }
+
+
+    const newBlog = new BlogModel({...req.body });
     const savedBlog = await newBlog.save();
     return res.status(200).json({ result: savedBlog }).end();
   } catch (error) {
@@ -53,11 +65,29 @@ export const getById = async (req, res, next) => {
 
 export const editById = async (req, res, next) => {
   try {
-    if (!req.body._id) {
+
+    console.log(req.body)
+
+    if(!req.body.blogTitle){
+      return res.status(400).json({ message: "Blog Title is required" });
+     }
+ 
+     if(!req.body.blogBody){
+       return res.status(400).json({ message: "Blog Body is required" });
+     }
+ 
+     if(!req.body.date){
+       return res.status(400).json({ message: "Date is required" });
+     }
+ 
+     if(!req.body.imageFile){
+       return res.status(400).json({ message: "Image file is required" });
+     }
+    if (!req.params.id) {
       return res.status(400).json({ message: "Id Not Provided!" }).end();
     }
 
-    const existingBlog = await BlogModel.findById(req.body._id);
+    const existingBlog = await BlogModel.findById(req.params.id);
 
     if (!existingBlog) {
       return res.status(400).json({ message: "City Not Exist!!" }).end();
@@ -66,23 +96,10 @@ export const editById = async (req, res, next) => {
     let obj = {
       ...req.body,
     };
-    if (req.files.mainImgaeLink) {
-      obj.mainImgaeLink = req.files.mainImgaeLink[0].filename;
-      if (existingBlog?.mainImgaeLink && existingBlog?.mainImgaeLink?.length > 0 ) {
-        const filename = existingBlog.mainImgaeLink;
-        const filePath = `/mainImage/${filename}`;
-        try {
-          await deleteFile(filePath);
-        } catch (error) {
-          return res
-            .status(400)
-            .json({ message: error.message || "Internal server error!" })
-            .end();
-        }
-      }
-    }
+
+    
     await BlogModel.findByIdAndUpdate(
-      req.body._id,
+      req.params.id,
       { $set: { ...obj } },
       { new: true }
     );

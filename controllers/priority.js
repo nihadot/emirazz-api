@@ -15,6 +15,14 @@ export const getAll = async (req, res, next) => {
       }
     }
 
+
+    const getPropertiess = await Property.find({ 
+      isSold: false, 
+      priority: { $exists: true, $ne: null } 
+    }).select("priority");
+
+    console.log(getPropertiess,'getPropertiess')
+
     return res.status(200).json({ result: allPriorities }).end();
   } catch (error) {
     return res
@@ -81,9 +89,13 @@ export const deletePriority = async (req, res, next) => {
         $unset: { priority: "" },
       });
     }
+
+    console.log(req.params.type)
+    console.log(req.params.id)
     if (req.params.type === "city") {
-      await City.findByIdAndUpdate(req.params.id, {
-        $unset: { priority: "" },
+       await City.findByIdAndUpdate(req.params.id, {
+        $unset: { priority: "",priorityExists:false },
+     
       });
     }
 

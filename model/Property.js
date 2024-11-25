@@ -1,67 +1,97 @@
 import mongoose, { Schema, model } from "mongoose";
 
 const PropertySchema = new Schema({
-    propretyHeadline:{
-        type:String,
+    isSold: {
+        type: Boolean,
+        default: false
     },
-    price: {
+    projectTitle: {
         type: String,
+        // required: true,
+    },
+    priceInAED: {
+        type: String,
+        // required: true,
+    },
+    handoverDate: {
+        type: Date,
+        // required: true,
     },
     beds: {
         type: String,
+        // required: true,
     },
-    handoverDate: {
+    mapLink: {
         type: String,
     },
-    googleMapLink: {
-        type: String,
+    propertyType: {
+        type: [String], // Array of strings (e.g., villa, apartment)
+        // required: true,
     },
-    address:{
-        type:String,
+    cities: [String],
+    developer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Developer",
+        // required: true,
     },
-    propertyType:{
-        type:[Schema.Types.ObjectId],
+    facilities: {
+        type: [String], // Array of strings
     },
-    mainImgaeLink: {
-        type: String,
+    paymentOptions: {
+        type: [String], // Array of strings
     },
-    videoLink: {
-        type: String,
+    nearbyAreas: {
+        type: [String], // Array of strings
     },
-    smallImage:[],
-    facilities: [],
-    paymentPlan: [],
-    areasNearBy: [],
-    description:{
-        type:String
+    priority: {
+        type: Number,
+        required: false,
     },
-    isChecked:{
-        type:Boolean,
-        default:false
-    },
-    isSold:{
-        type:Boolean,
-        default:false
-    },
-    developerRef:{
-        type: Schema.Types.ObjectId
-    },
-    citiesArrayRef:{
-        type:[Schema.Types.ObjectId]
-    },
-    priority:{
-        type: String
-    },
-    isAds:{
-        type:Boolean,
+    priorityExists: {
+        type: Boolean,
         default: false,
     },
-    sideBarRef:{
-        type: Schema.Types.ObjectId
+    adsOptions: {
+        type: String,
     },
-    projectNo:{
-        type:String,
-    }
+    address: {
+        type: String,
+    },
+    description: {
+        type: String,
+    },
+    projectVideo: {
+        type: String,
+    },
+    projectNumber: {
+        type: String,
+    },
+    isChecked: {
+        type: Boolean,
+    },
+    draft: {
+        type: Boolean,
+        default: false,
+    },
+    imageFile: {
+        asset_id: { type: String },
+        secure_url: { type: String },
+        url: { type: String },
+        public_id: { type: String },
+    },
+    imageFiles: [
+        {
+            asset_id: { type: String },
+            secure_url: { type: String },
+            url: { type: String },
+            public_id: { type: String },
+        },
+    ],
+    isSold: {
+        type: Boolean,
+        default: false
+    },
+
 }, { timestamps: true });
 
 const Property = model("Property", PropertySchema);

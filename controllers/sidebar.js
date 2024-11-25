@@ -5,14 +5,17 @@ import Property from "../model/Property.js";
 
 export const create = async (req, res, next) => {
   try {
-    const mainImgaeLink = req.files.mainImgaeLink
-      ? req.files.mainImgaeLink[0].filename
-      : "";
+ 
+    if(!req.body.name){
+      return res.status(400).json({ message: "Name is required!" }).end();
+    }
 
-    const newSideBar = new SideBannerLogo({
-      mainImgaeLink: mainImgaeLink,
-      ...req.body,
-    });
+    if(!req.body.imageFile){
+      return res.status(400).json({ message: "Image file is required!" }).end();
+    }
+
+
+    const newSideBar = new SideBannerLogo({...req.body});
 
     const savedSideBar = await newSideBar.save();
     return res.status(200).json({ result: savedSideBar }).end();
@@ -35,7 +38,7 @@ export const getAll = async (req, res, next) => {
     for (let item of getAllSideBanners) {
       if (item) {
         const result = getAllPropertes.find(
-          (itm) => itm.sideBarRef + "" === item._id + ""
+          (itm) => itm.adsOptions + "" === item._id + ""
         );
         if (result) {
           if (result) {
@@ -69,7 +72,7 @@ export const deleteById = async (req, res, next) => {
     }
 
     const existProperty = await Property.findOne({
-      sideBarRef: new mongoose.Types.ObjectId(req.params.id),
+       adsOptions: new mongoose.Types.ObjectId(req.params.id),
     });
 
     if (existProperty) {
@@ -79,12 +82,16 @@ export const deleteById = async (req, res, next) => {
         .end();
     }
 
+    // console.log(existProperty,'existProperty')
+
+    // return true;
+
     await SideBannerLogo.findByIdAndDelete(req.params.id);
 
-    if (existBanner?.mainImgaeLink && existBanner?.mainImgaeLink.length > 0) {
-      const filePath = `/mainImage/${existBanner?.mainImgaeLink}`;
-      const response = await deleteFile(filePath);
-    }
+    // if (existBanner?.mainImgaeLink && existBanner?.mainImgaeLink.length > 0) {
+    //   const filePath = `/mainImage/${existBanner?.mainImgaeLink}`;
+    //   const response = await deleteFile(filePath);
+    // }
 
     return res.status(200).json({ message: "Successfully Deleted" }).end();
   } catch (error) {

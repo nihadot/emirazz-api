@@ -2,15 +2,17 @@ import { Schema, model } from "mongoose";
 
 const SideBannerSchema = new Schema(
   {
-    mainImgaeLink: {
-      type: String,
-    },
+    imageFile: 
+      { 
+          asset_id: { type: String },
+          secure_url: { type: String },
+          url: { type: String },
+          public_id: { type: String },
+      },
     name: {
       type: String,
     },
-    title: {
-      type: String,
-    },
+  
   },
   { timestamps: true }
 );

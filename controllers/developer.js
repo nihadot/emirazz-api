@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import DeveloperModel from "../model/Developer.js";
+import DeveloperModel, { addDeveloperSchema } from "../model/Developer.js";
 import { deleteFile } from "../middleware/deleteFile.js";
 import Property from "../model/Property.js";
 import mongoose from "mongoose";
@@ -8,13 +8,23 @@ import { sortProjects } from "../helpers/sortProjects.js";
 
 export const create = async (req, res, next) => {
   try {
-    const mainImgaeLink = req.files.mainImgaeLink
-      ? req.files.mainImgaeLink[0].filename
-      : "";
-    const newDeveloper = new DeveloperModel({
-      ...req.body,
-      mainImgaeLink: mainImgaeLink,
+    const { error, value } = addDeveloperSchema.validate(req.body, {
+      abortEarly: false,
     });
+
+    if (error) {
+      return res.status(400).json({
+        message: "Validation error",
+        details: error.details.map((err) => err.message),
+      });
+    }
+
+    if(value.priority){
+      value.priorityExists = true;
+     }
+
+     console.log(value,'value')
+    const newDeveloper = new DeveloperModel(value);
     const savedDeveloper = await newDeveloper.save();
     return res.status(200).json({ result: savedDeveloper }).end();
   } catch (error) {
@@ -39,42 +49,61 @@ export const getAll = async (req, res, next) => {
       .end();
   }
 };
-
-export const editById = async (req, res, next) => {
+export const getDeveloperById = async (req, res, next) => {
   try {
-    if (!req.body._id) {
+
+    if (!req.params.id) {
       return res.status(400).json({ message: "Id Not Provided!" }).end();
     }
 
-    const existingDeveloper = await DeveloperModel.findById(req.body._id);
+    const getDeveloper = await DeveloperModel.find(req.params.id);
+
+    return res.status(200).json({ result: getDeveloper }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+
+
+export const editById = async (req, res, next) => {
+  try {
+    if (!req.params.id) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+
+    const existingDeveloper = await DeveloperModel.findById(req.params.id);
 
     if (!existingDeveloper) {
-      return res.status(400).json({ message: "City Not Exist!!" }).end();
+      return res.status(400).json({ message: "Developer Not Exist!!" }).end();
     }
+    console.log(req.body,'-req.body')
 
-    let obj = {
-      ...req.body,
+    let data = {
+      developerName: req.body.developerName,
+        password: req.body.password,
+        username: req.body.username,
     };
+    if(req.body.priority){
+      data.priorityExists = true;
+      data.priority = req.body.priority;
+    }else{
+      data.priorityExists = false;
+      data.priority = null;
+    }
+    const toCOnvertString = Object.keys(req.body.imageFile).length > 0 && true;
 
-    if (req.files.mainImgaeLink) {
-      obj.mainImgaeLink = req.files.mainImgaeLink[0].filename;
-    if(existingDeveloper?.mainImgaeLink && existingDeveloper?.mainImgaeLink?.length > 0){
-      const filename = existingDeveloper.mainImgaeLink;
-      const filePath = `/mainImage/${filename}`;
-      try {
-        await deleteFile(filePath);
-      } catch (error) {
-        return res
-        .status(400)
-        .json({ message: error.message || "Internal server error!" })
-        .end();
-      }
+    if(toCOnvertString){
+      data.imageFile = req.body.imageFile;
     }
-    }
+
 
     await DeveloperModel.findByIdAndUpdate(
-      req.body._id,
-      { $set: { ...obj } },
+      req.params.id,
+      { $set: { ...data } },
       { new: true }
     );
 
@@ -99,26 +128,14 @@ export const deleteById = async (req, res, next) => {
       return res.status(400).json({ message: "City Not Exist!!" }).end();
     }
 
-    const isExistingDeveloper = await Property.findOne({developerRef:new mongoose.Types.ObjectId(req.params.id)});
+    const isExistingDeveloper = await Property.findOne({developer:new mongoose.Types.ObjectId(req.params.id)});
 
     if(isExistingDeveloper){
-      return res.status(400).json({ message: "Already property avalible under the developer" }).end();
+      return res.status(400).json({ message: "Already property available under the developer" }).end();
     }
 
     await DeveloperModel.findByIdAndDelete(req.params.id);
 
-    if (existingDeveloper?.mainImgaeLink && existingDeveloper?.mainImgaeLink.length > 0) {
-      const filename = existingDeveloper.mainImgaeLink;
-      const filePath = `/mainImage/${filename}`;
-      try {
-        const response = await deleteFile(filePath);
-      } catch (error) {
-        return res
-          .status(400)
-          .json({ message: error.message || "Internal server error!" })
-          .end();
-      }
-    }
 
     return res.status(200).json({ message: "Successfully Deleted" }).end();
   } catch (error) {
