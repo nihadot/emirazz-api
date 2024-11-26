@@ -20,7 +20,7 @@ import Joi from "joi";
 
 // Validation schema for required fields
 const addingProject = Joi.object({
-  projectTitle: Joi.string().min(3).max(50).required(), // Title must be between 3-100 characters
+  projectTitle: Joi.string().min(3).max(250).required(), // Title must be between 3-100 characters
   priceInAED: Joi.string().required(), // Ensure price is numeric (as string)
   handoverDate: Joi.date().iso().required(), // ISO date format
   beds: Joi.string().required(), // Ensure beds are numeric (as string)
@@ -1384,7 +1384,7 @@ console.log(req.params.lockStatus)
 
 // Validation schema for required fields
 const updateDetails = Joi.object({
-  projectTitle: Joi.string().min(3).max(50).required(), // Title must be between 3-100 characters
+  projectTitle: Joi.string().min(3).max(250).required(), // Title must be between 3-100 characters
   priceInAED: Joi.string().required(), // Ensure price is numeric (as string)
   handoverDate: Joi.date().iso().required(), // ISO date format
   beds: Joi.string().required(), // Ensure beds are numeric (as string)
