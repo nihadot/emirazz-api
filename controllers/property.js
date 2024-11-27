@@ -571,7 +571,7 @@ export const createEnquiry = async (req, res, next) => {
     const obj = {
       name: req.body.name,
       number: req.body.number,
-      projectId: req.body.projectId,
+      // projectId: req.body.projectId,
       propertyId: req.body.propertyId,
       developerId: IsProperty.developer+''
     }
@@ -1784,3 +1784,43 @@ export const deleteAdsFromProjectById = async (req, res, next) => {
 
 
 
+
+
+
+export const getPropertyCountFromProject = async (req, res, next) => {
+  try {
+ 
+
+    const result = await PropertyModel.aggregate([
+      {
+        $unwind: "$propertyType", // Unwind the propertyType array to count each property type separately
+      },
+      {
+        $group: {
+          _id: "$propertyType", // Group by property type
+          totalProperties: { $sum: 1 }, // Count each document within each property type
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          propertyType: "$_id", // Rename _id to propertyType
+          totalProperties: 1, // Keep the count
+        },
+      },
+      {
+        $sort: { propertyType: 1 }, // Sort alphabetically by property type
+      },
+    ]);
+
+    return res.status(200).json({
+      result: result,
+    });
+
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};

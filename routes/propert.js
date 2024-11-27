@@ -28,7 +28,8 @@ import {
     deleteCityFromProjectById,
     deletePropertyTypeFromProjectById,
     deletePriorityFromProjectById,
-    deleteAdsFromProjectById
+    deleteAdsFromProjectById,
+    getPropertyCountFromProject
 } from '../controllers/property.js';
 import { verifyAdmin, verifyAdminOrAgency, verifyToken } from '../middleware/verifyingToken.js';
 import { upload } from '../middleware/multer.js';
@@ -76,6 +77,9 @@ router.delete("/city/delete/:projectId/:cityId",verifyAdmin, deleteCityFromProje
 router.delete("/property-type/delete/:projectId/:typeId",verifyAdmin, deletePropertyTypeFromProjectById); 
 router.delete("/delete/priority/:projectId/:item",verifyAdmin, deletePriorityFromProjectById);
 router.delete("/delete/ads/:projectId",verifyAdmin, deleteAdsFromProjectById);
+
+
+router.get("/get-property-type/count", getPropertyCountFromProject);
 
 
 export default router
