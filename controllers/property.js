@@ -1607,6 +1607,10 @@ export const updateOtherOptions = async (req, res, next) => {
       if (req.body.isSold !== undefined) {
         obj.isSold = req.body.isSold;
       }
+
+      if(req.body.adsOptions !== undefined) {
+        obj.adsOptions = req.body.adsOptions;
+      }
     
       // Update the document in MongoDB
       await PropertyModel.findByIdAndUpdate(id, { $set: { ...obj } });
@@ -1820,6 +1824,40 @@ export const getPropertyCountFromProject = async (req, res, next) => {
   } catch (error) {
     return res
       .status(500)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+
+
+
+export const updateProductStatusToPublic = async (req, res, next) => {
+  try {
+
+    // console.log(req.params)
+    // console.log(req.body);
+    // return true
+    // console.log(req.params)
+    if (!req.params.id ) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+
+    const isProperty = await PropertyModel.findById(req.params.id);
+
+    // console.log(isProperty,'isProperty')
+    // return true
+    if (!isProperty) {
+      return res.status(400).json({ message: "Property Not Exist!!" }).end();
+    }
+
+    isProperty.draft = false;
+    await isProperty.save();
+
+    return res.status(200).json({ message: "Successfully Updated" }).end();
+  } catch (error) {
+    return res
+      .status(400)
       .json({ message: error.message || "Internal server error!" })
       .end();
   }
