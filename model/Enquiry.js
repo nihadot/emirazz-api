@@ -19,7 +19,7 @@ const enquirySchema = new Schema({
     },
     status: {
         type: String,  
-        enum:["qualified","not-interested","agent","interested","in-progress","closed","newlead","wrong-number"],
+        enum:["qualified","not-interested","agent","interested","in-progress","closed","newlead","wrong-number","in-progressive"],
         default:"newlead"
     },
     note:{
@@ -28,6 +28,9 @@ const enquirySchema = new Schema({
     isLocked:{
         type:Boolean,
         default:false
+    },
+    assignedTo:{
+        type: mongoose.Types.ObjectId,
     }
 }, { timestamps: true });
 

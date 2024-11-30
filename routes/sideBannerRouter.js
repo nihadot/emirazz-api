@@ -8,7 +8,7 @@ const router = express.Router()
 
 
 // CREATE SIDEBAR
-router.post("/",verifyAdmin,  upload,create)
+router.post("/",verifyAdmin,create)
 
 // get not availbe side bar ids
 router.get("/not-available", getAllSideBarIsNotAvailbe)

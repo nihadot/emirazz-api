@@ -42,7 +42,9 @@ const addingProject = Joi.object({
   projectVideo: Joi.string().allow(''),
   projectNumber : Joi.string().allow(''),
   // adsOptions: Joi.string().required(), // MongoDB ObjectID validation
-
+  projectMetaDescription:Joi.string().allow(''),
+  projectMetaTitle:Joi.string().allow(''),
+  projectMetaKeywords:Joi.string().allow(''),
 });
 
 
@@ -61,6 +63,12 @@ export const create = async (req, res, next) => {
         });
       }
 
+
+    const isExist = new PropertyModel({projectTitle: req.body.projectTitle});
+
+      if(isExist){
+        return res.status(400).json({ message: "Project title already exists" }).end();
+      }
 
       if(value.priority){
         value.priorityExists = true;
@@ -641,57 +649,186 @@ export const getEnquiry = async (req, res, next) => {
     // ])
 
 
+    // const items = await Enquiry.find(
+    //   {
+    //     $set: {
+    //       developerId: { $toObjectId: "$developerId" } // Convert the `developer` string to ObjectId
+    //     }
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "developers", // Name of the related collection
+    //       localField: "developerId", // The converted ObjectId
+    //       foreignField: "_id", // Field in the `developers` collection to match
+    //       as: "developerDetails" // Output array with matched documents
+    //     }
+    //   },
+    //   {
+    //     $unwind: "$developerDetails" // Ensure developer details are a single object
+    //   },
+
+
+
+    //   {
+    //     $set: {
+    //       propertyId: { $toObjectId: "$propertyId" } // Convert the `developer` string to ObjectId
+    //     }
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "properties", // Name of the related collection
+    //       localField: "propertyId", // The converted ObjectId
+    //       foreignField: "_id", // Field in the `developers` collection to match
+    //       as: "propertyDetails" // Output array with matched documents
+    //     }
+    //   },
+    //   {
+    //     $unwind: "$propertyDetails" // Ensure developer details are a single object
+    //   },
+    
+     
+    // )
+
+
+
+    
+
     const items = await Enquiry.aggregate([
       {
         $set: {
-          developerId: { $toObjectId: "$developerId" } // Convert the `developer` string to ObjectId
+          developerId: { $toObjectId: "$developerId" },
+          propertyId: { $toObjectId: "$propertyId" }
         }
       },
       {
         $lookup: {
-          from: "developers", // Name of the related collection
-          localField: "developerId", // The converted ObjectId
-          foreignField: "_id", // Field in the `developers` collection to match
-          as: "developerDetails" // Output array with matched documents
+          from: "developers",
+          localField: "developerId",
+          foreignField: "_id",
+          as: "developerDetails"
         }
       },
       {
-        $unwind: "$developerDetails" // Ensure developer details are a single object
-      },
-      // {
-      //   $set: {
-      //     developerDetails: { $cond: { if: { $not: "$developerDetails" }, then: null, else: { $toObjectId: "$developerDetails" } } } // Convert the `adsOptions` string to ObjectId if present
-      //   }
-      // },
-     
-
-
-      {
-        $set: {
-          propertyId: { $toObjectId: "$propertyId" } // Convert the `developer` string to ObjectId
-        }
+        $unwind: "$developerDetails"
       },
       {
         $lookup: {
-          from: "properties", // Name of the related collection
-          localField: "propertyId", // The converted ObjectId
-          foreignField: "_id", // Field in the `developers` collection to match
-          as: "propertyDetails" // Output array with matched documents
+          from: "properties",
+          localField: "propertyId",
+          foreignField: "_id",
+          as: "propertyDetails"
         }
       },
       {
-        $unwind: "$propertyDetails" // Ensure developer details are a single object
-      },
-      // {
-      //   $set: {
-      //     propertyId: { $cond: { if: { $not: "$propertyId" }, then: null, else: { $toObjectId: "$propertyId" } } } // Convert the `adsOptions` string to ObjectId if present
-      //   }
-      // },
-     
-    ])
+        $unwind: "$propertyDetails"
+      }
+    ]);
+
+
+    for (const element of items) {
+      console.log(element, 'element');
     
+      if (element.assignedTo) {
+        const assignedRecord = await AssignedModel.findById(element.assignedTo).lean();
+    
+        if (assignedRecord?.agencyId) {
+          const agencyRecord = await Agency.findById(assignedRecord.agencyId).lean();
+    
+          if (agencyRecord?.name) {
+            element.assignedToName = agencyRecord.name;
+          }
+        }
+      }
+    }
+
+    // console.log(items,'items')
 
 
+      // {
+      //   $lookup: {
+      //     from: "assignedprojects",
+      //     localField: "assignedTo",
+      //     foreignField: "_id",
+      //     as: "assignedDetails"
+      //   }
+      // },
+      // {
+      //   $unwind: {
+      //     path: "$assignedDetails",
+      //     preserveNullAndEmptyArrays: true
+      //   }
+      // }
+
+    // const { ObjectId } = require("mongodb"); // Import ObjectId to use later if needed
+
+// const items = await Enquiry.aggregate([
+//   {
+//     $set: {
+//       developerId: { $toObjectId: "$developerId" },
+//       propertyId: { $toObjectId: "$propertyId" }
+//     }
+//   },
+//   {
+//     $lookup: {
+//       from: "developers",
+//       localField: "developerId",
+//       foreignField: "_id",
+//       as: "developerDetails"
+//     }
+//   },
+//   {
+//     $unwind: "$developerDetails"
+//   },
+//   {
+//     $lookup: {
+//       from: "properties",
+//       localField: "propertyId",
+//       foreignField: "_id",
+//       as: "propertyDetails"
+//     }
+//   },
+//   {
+//     $unwind: "$propertyDetails"
+//   },
+//   {
+//     $match: {
+//       assignedTo: { $exists: true, $type: "string", $regex: /^[a-f\d]{24}$/i }
+//       // Ensures `assignedTo` exists, is a string, and matches ObjectId format
+//     }
+//   },
+//   {
+//     $set: {
+//       assignedTo: { $toObjectId: "$assignedTo" } // Convert the valid string to ObjectId
+//     }
+//   },
+//   {
+//     $lookup: {
+//       from: "assignedprojects",
+//       localField: "assignedTo",
+//       foreignField: "_id",
+//       as: "assignedDetails"
+//     }
+//   },
+//   {
+//     $unwind: {
+//       path: "$assignedDetails",
+//       preserveNullAndEmptyArrays: true // In case you still want to include non-matching documents
+//     }
+//   }
+// ]);
+
+
+      // {
+      //   $lookup: {
+      //     from: "assignedprojects", // Name of the related collection
+      //     localField: "assignedTo", // The converted ObjectId
+      //     foreignField: "_id", // Field in the `developers` collection to match
+      //     as: "assignedDetails" // Output array with matched documents
+      //   }
+      // },
+      // {
+      //   $unwind: "$assignedDetails" // Ensure developer details are a single object
+      // },
 
     return res.status(200).json({ result: items }).end();
   } catch (error) {
@@ -1219,36 +1356,45 @@ export const getEnquiryUnderAgency = async (req, res, next) => {
       return res.status(400).json({ message: "You are not authorized!" }).end();
     }
 
-    const isAssignedEnquiries  = await AssignedModel.find({ agencyId: new mongoose.Types.ObjectId(req.user.id) });
+    console.log(req.user.id)
 
-    const newArray = [];
-
-    for (let item of isAssignedEnquiries) {
-      if (item) {
-      
-        const getLead = await Enquiry.findById(item.leadId);
-
-        if(getLead){
-
-          const [getProperty, getDeveloper] = await Promise.all([
-            PropertyModel.findById(getLead.propertyId),
-            Developer.findById(getLead.developerId)
-          ]);
-      
-          newArray.push({
-            ...getLead._doc,
-            propertyName: getProperty ? getProperty.propretyHeadline : '',
-            developerName: getDeveloper ? getDeveloper.developerName : '',
-          });
-
-
+    const items = await Enquiry.aggregate([
+      {$match:{
+        assignedTo:new mongoose.Types.ObjectId(req.user.id)
+      }},
+      {
+        $set: {
+          developerId: { $toObjectId: "$developerId" },
+          propertyId: { $toObjectId: "$propertyId" }
         }
-    
-       
+      },
+      {
+        $lookup: {
+          from: "developers",
+          localField: "developerId",
+          foreignField: "_id",
+          as: "developerDetails"
+        }
+      },
+      {
+        $unwind: "$developerDetails"
+      },
+      {
+        $lookup: {
+          from: "properties",
+          localField: "propertyId",
+          foreignField: "_id",
+          as: "propertyDetails"
+        }
+      },
+      {
+        $unwind: "$propertyDetails"
       }
-    }
+    ]);
+    // const isAssignedEnquiries  = await Enquiry.find({ assignedTo: new mongoose.Types.ObjectId(req.user.id) });
 
-    const sortedProperties = newArray?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+   
+    const sortedProperties = items?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
 
     return res.status(200).json({ result: sortedProperties }).end();
@@ -1410,7 +1556,6 @@ export const updateProjectBasicDetails = async (req, res, next) => {
 
     const isProperty = await PropertyModel.findById(req.params.id);
 
-    console.log(isProperty,'isProperty')
     // return true
     if (!isProperty) {
       return res.status(400).json({ message: "Property Not Exist!!" }).end();

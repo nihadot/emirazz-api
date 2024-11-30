@@ -6,11 +6,16 @@ import Property from "../model/Property.js";
 export const create = async (req, res, next) => {
   try {
  
+
     if(!req.body.name){
       return res.status(400).json({ message: "Name is required!" }).end();
     }
 
     if(!req.body.imageFile){
+      return res.status(400).json({ message: "Image file is required!" }).end();
+    }
+
+    if(!req.body.landScape){
       return res.status(400).json({ message: "Image file is required!" }).end();
     }
 

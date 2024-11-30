@@ -143,35 +143,46 @@ export const assignedByAgency = async (req, res, next) => {
   try {
     const { agencyId, leadId } = req.body;
 
+
+
+    console.log('[BODY]:',req.body)
     if (!agencyId || !leadId) {
       return res.status(400).json({ message: "Id Not Provided!" }).end();
     }
 
     // if exist the lead to change the status
 
-    const isExistAssignedLead = await AssignedModel.findOne({
-      leadId: new mongoose.Types.ObjectId(leadId),
-    });
+    // const isExistAssignedLead = await AssignedModel.findOne({
+    //   leadId: new mongoose.Types.ObjectId(leadId),
+    // });
 
-    if (isExistAssignedLead) {
-      if (req.body.agencyId === "none") {
-        await AssignedModel.findByIdAndUpdate(isExistAssignedLead._id, {
-          $unset: {
-            agencyId: 1, // Unset the `agencyId` field
-          },
-        });
-      } else {
-        // to change the leade by body agencyId
-        await AssignedModel.findByIdAndUpdate(isExistAssignedLead._id, {
-          $set: {
-            agencyId,
-          },
-        });
-      }
-      return res.status(200).json({ message: "Successfully Assigned" }).end();
-    }
-    if (req.body.agencyId === "none") {
-      return res.status(400).json({ message: "Lead Not Exist!!" }).end();
+    // console.log('[isExistAssignedLead]: ',isExistAssignedLead)
+
+    // if (isExistAssignedLead) {
+    //   if (req.body.agencyId === "none") {
+    //     await AssignedModel.findByIdAndUpdate(isExistAssignedLead._id, {
+    //       $unset: {
+    //         agencyId: 1, // Unset the `agencyId` field
+    //       },
+    //     });
+    //   } else {
+    //     // to change the leade by body agencyId
+    //     await AssignedModel.findByIdAndUpdate(isExistAssignedLead._id, {
+    //       $set: {
+    //         agencyId,
+    //       },
+    //     });
+    //   }
+    //   return res.status(200).json({ message: "Successfully Assigned" }).end();
+    // }
+    // if (req.body.agencyId === "none") {
+    //   return res.status(400).json({ message: "Lead Not Exist!!" }).end();
+    // }
+
+    if(agencyId === "none"){
+     await Enquiry.findByIdAndUpdate(leadId,{$unset:{assignedTo:agencyId}});
+    return res.status(200).json({ message: "Successfully Assigned" }).end();
+
     }
 
     const existingAgency = await AgencyModel.findById(agencyId);
@@ -186,9 +197,12 @@ export const assignedByAgency = async (req, res, next) => {
       return res.status(400).json({ message: "Lead Not Exist!!" }).end();
     }
 
-    const newAssigned = new AssignedModel({ leadId, agencyId });
+    // const newAssigned = new AssignedModel({ leadId, agencyId });
 
-    await newAssigned.save();
+    // await newAssigned.save();
+
+    await Enquiry.findByIdAndUpdate(leadId,{$set:{assignedTo:agencyId}});
+
 
     return res.status(200).json({ message: "Successfully Assigned" }).end();
   } catch (error) {

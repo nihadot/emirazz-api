@@ -91,6 +91,16 @@ const PropertySchema = new Schema({
         type: Boolean,
         default: false
     },
+    projectMetaDescription:{
+        type: String,
+    },
+    projectMetaTitle:{
+        type: String,
+    },
+    projectMetaKeywords:{
+        type:String,
+    }
+
 
 }, { timestamps: true });
 

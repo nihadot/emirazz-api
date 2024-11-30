@@ -65,7 +65,7 @@ router.get("/city/:id", getProjectsByCityId)
 router.get("/developers/:id", getProjectsByDevelopersId) 
 
 router.put("/enq-change-note/:id", enqChangeNoteStatus) 
-router.put("/enq-change-note/:id", enqChangeNoteStatus) 
+// router.put("/enq-change-note/:id", enqChangeNoteStatus) 
 
 router.delete("/delete-existing-city/:cityId/:propertyId", deleteExistingCityByPropertyIdAndCityId) 
 router.put("/enq-toggle-lock/:lockStatus/:enquiryId", updateToggleLock) 
