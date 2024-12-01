@@ -64,7 +64,8 @@ export const create = async (req, res, next) => {
       }
 
 
-    const isExist = new PropertyModel({projectTitle: req.body.projectTitle});
+    const isExist = await PropertyModel.findOne({projectTitle: req.body.projectTitle});
+
 
       if(isExist){
         return res.status(400).json({ message: "Project title already exists" }).end();
@@ -73,23 +74,25 @@ export const create = async (req, res, next) => {
       if(value.priority){
         value.priorityExists = true;
        }
+
+       console.log(req.body);
     
     const newProperty = new PropertyModel(value);
 
-    // if(!req.body.developer){
-    //   return res.status(200).json({ message: 'Developer not found' });
-    // }
-    // const isExistDeveloper = await Developer.findById(req.body.developer);
+    if(!req.body.developer){
+      return res.status(200).json({ message: 'Developer not found' });
+    }
+    const isExistDeveloper = await Developer.findById(req.body.developer);
 
-    // if(!isExistDeveloper){
-    //   return res.status(400).json({ message: "Developer not found" }).end();
-    // }
+    if(!isExistDeveloper){
+      return res.status(400).json({ message: "Developer not found" }).end();
+    }
 
 
-    // const newNotification = new Notification({
-    //   title:`New project launched by ${isExistDeveloper?.developerName} Starting From ${req.body.priceInAED}`,
-    //   imageFile:req.body.imageFile
-    // })
+    const newNotification = new Notification({
+      title:`New project launched by ${isExistDeveloper?.developerName} Starting From ${req.body.priceInAED}`,
+      imageFile:req.body.imageFile
+    })
 
     const savedProperty = await newProperty.save();
     // const savedNotification = await newNotification.save();

@@ -1,5 +1,5 @@
 import express from 'express';
-import { register,login,getAdmin } from '../controllers/admin.js';
+import { register,login,getAdmin,getAllCountAll } from '../controllers/admin.js';
 import { verifyAdmin, verifyToken } from '../middleware/verifyingToken.js';
 
 
@@ -12,6 +12,7 @@ router.post("/register", register)
 router.post("/login", login)
 // GET DETAILS OF ADMIN BY TOKEN
 router.get("/profile", verifyAdmin, getAdmin) 
+router.get("/count-all", verifyAdmin, getAllCountAll) 
 
 
 

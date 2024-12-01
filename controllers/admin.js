@@ -1,6 +1,12 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import AdminModel from "../model/Admin.js";
+import Agency from "../model/Agency.js";
+import Blog from "../model/Blog.js";
+import City from "../model/City.js";
+import Developer from "../model/Developer.js";
+import Enquiry from "../model/Enquiry.js";
+import Property from "../model/Property.js";
 
 export const register = async (req, res, next) => {
 
@@ -89,6 +95,49 @@ export const getAdmin = async (req, res, next) => {
       if(!getAdmin) return res.status(401).json({message:'Not found!'}).end();
       
       return res.status(200).json({ result:getAdmin }).end();
+   
+  } catch (error) {
+    
+    return res.status(400).json({message: error.message || 'Internal server error!'}).end();
+
+  }
+};
+
+
+
+
+
+export const getAllCountAll = async (req, res, next) => {
+
+  try {
+
+    const obj = {
+      agency: 0,
+      blog: 0,
+      cities: 0,
+      developer: 0,
+      enquiries:0,
+      projects: 0,
+    }
+      const getAgency = await Agency.countDocuments();
+      const getBlog = await Blog.countDocuments();
+      const getCity = await City.countDocuments();
+      const getDeveloper = await Developer.countDocuments();
+      const getEnquiries = await Enquiry.countDocuments();
+      const getProperty = await Property.countDocuments();
+
+
+      obj.blog = getBlog;
+      obj.enquiries = getEnquiries;
+      obj.cities = getCity;
+      obj.agency = getAgency;
+    obj.developer = getDeveloper;
+    obj.projects = getProperty;
+
+   
+
+      
+      return res.status(200).json({ result:obj }).end();
    
   } catch (error) {
     
