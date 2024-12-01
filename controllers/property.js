@@ -75,7 +75,6 @@ export const create = async (req, res, next) => {
         value.priorityExists = true;
        }
 
-       console.log(req.body);
     
     const newProperty = new PropertyModel(value);
 
@@ -95,7 +94,7 @@ export const create = async (req, res, next) => {
     })
 
     const savedProperty = await newProperty.save();
-    // const savedNotification = await newNotification.save();
+    const savedNotification = await newNotification.save();
     
     return res.status(200).json({ result: savedProperty }).end();
   } catch (error) {
