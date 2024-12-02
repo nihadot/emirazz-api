@@ -9,13 +9,11 @@ import { sortDateWise } from "../helpers/dateWiseSort.js";
 
 export const create = async (req, res, next) => {
   try {
-    const mainImgaeLink = req.files.mainImgaeLink
-      ? req.files.mainImgaeLink[0].filename
-      : "";
+
+    console.log(req.body)
+   
     const newNotification = new NotificationModel({
-      ...req.body,
-      mainImgaeLink: mainImgaeLink,
-    });
+      ...req.body });
     const savedNotification = await newNotification.save();
     return res.status(200).json({ result: savedNotification }).end();
   } catch (error) {
@@ -28,9 +26,86 @@ export const create = async (req, res, next) => {
 
 export const getAll = async (req, res, next) => {
   try {
-    const getNotifications = await NotificationModel.find()
-
-    const sortedDateWise = sortDateWise(getNotifications)
+    const notifications = await NotificationModel.aggregate([
+      // Perform a conditional lookup for `propertyDetails` only if `project` exists
+      {
+        $addFields: {
+          projectExists: { $cond: { if: { $ifNull: ["$project", false] }, then: true, else: false } },
+        },
+      },
+      {
+        $lookup: {
+          from: "properties",
+          let: { projectId: "$project", projectExists: "$projectExists" },
+          pipeline: [
+            { $match: { $expr: { $and: ["$$projectExists", { $eq: ["$_id", { $toObjectId: "$$projectId" }] }] } } },
+            {
+              $set: {
+                cities: {
+                  $map: {
+                    input: "$cities",
+                    as: "cityId",
+                    in: { $toObjectId: "$$cityId" },
+                  },
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: "cities",
+                localField: "cities",
+                foreignField: "_id",
+                as: "cityDetails",
+              },
+            },
+            {
+              $set: {
+                developer: { $toObjectId: "$developer" },
+              },
+            },
+            {
+              $lookup: {
+                from: "developers",
+                localField: "developer",
+                foreignField: "_id",
+                as: "developerDetails",
+              },
+            },
+            { $unwind: { path: "$developerDetails", preserveNullAndEmptyArrays: true } },
+            {
+              $set: {
+                adsOptions: {
+                  $cond: {
+                    if: { $not: "$adsOptions" },
+                    then: null,
+                    else: { $toObjectId: "$adsOptions" },
+                  },
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: "sidebannerlogos",
+                localField: "adsOptions",
+                foreignField: "_id",
+                as: "adsDetails",
+              },
+            },
+            { $unwind: { path: "$adsDetails", preserveNullAndEmptyArrays: true } },
+          ],
+          as: "propertyDetails",
+        },
+      },
+      {
+        $set: {
+          propertyDetails: { $arrayElemAt: ["$propertyDetails", 0] }, // Flatten `propertyDetails` array to an object
+        },
+      },
+      {
+        $unset: "projectExists", // Remove temporary field
+      },
+    ]);
+    const sortedDateWise = sortDateWise(notifications)
 
     return res.status(200).json({ result: sortedDateWise }).end();
   } catch (error) {
@@ -43,6 +118,8 @@ export const getAll = async (req, res, next) => {
 
 export const editById = async (req, res, next) => {
   try {
+
+  
     if (!req.params.id) {
       return res.status(400).json({ message: "Id Not Provided!" }).end();
     }

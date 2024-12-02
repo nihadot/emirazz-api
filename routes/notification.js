@@ -10,7 +10,7 @@ router.post("/", verifyAdmin, upload, create);
 // GET ALL NOTIFICATION
 router.get("/", getAll);
 // UPDATE NOTIFICATION BY ID
-router.put("/update-notification/:id", verifyAdmin, upload, editById);
+router.put("/update-notification/:id", verifyAdmin, editById);
 // DELETE NOTIFICATION BY ID
 router.delete("/:id", verifyAdmin, deleteById);
 // NOTIFICATION GET BY ID

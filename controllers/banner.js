@@ -1,5 +1,7 @@
 import { deleteFile } from "../middleware/deleteFile.js";
 import BannerModel from "../model/Banner.js";
+import Country from "../model/Country.js";
+import Language from "../model/Language.js";
 
 export const create = async (req, res, next) => {
   try {
@@ -110,6 +112,185 @@ export const deleteById = async (req, res, next) => {
     }
 
     return res.status(200).json({ message: "Successfully Deleted" }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+export const createLanguage = async (req, res, next) => {
+  try {
+
+    if(!req.body.languageName){
+      return res.status(400).json({ message: "Language Name is Required!" }).end();
+    }
+
+    const newLanguage = new Language({
+      languageName: req.body.languageName,
+    });
+
+    const savedLanguage = await newLanguage.save();
+    return res.status(200).json({ message: "Successfully Added" }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+export const getAllLanguages = async (req, res, next) => {
+  try {
+
+  
+    const allLanguages = await Language.find();
+
+
+    return res.status(200).json({ result:allLanguages }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+export const deleteLanguage = async (req, res, next) => {
+  try {
+
+
+    if(!req.params.id){
+      return res.status(400).json({ message: "Id is Required!" }).end();
+    }
+  
+   await Language.findByIdAndDelete(req.params.id);
+
+
+    return res.status(200).json({ message:`Successfully deleted` }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+export const updateLanguage = async (req, res, next) => {
+  try {
+
+  
+    if (!req.params.id) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+
+    const existingBanner = await Language.findByIdAndUpdate(req.params.id,{$set:{
+      languageName: req.body.languageName
+    }});
+
+    if (!existingBanner) {
+      return res.status(400).json({ message: "Language Not Exist!!" }).end();
+    }
+
+   
+    return res
+      .status(200)
+      .json({ message: "Successfully Updated" })
+      .end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+
+
+
+
+
+// countries
+
+export const createCountry = async (req, res, next) => {
+  try {
+
+    if(!req.body.countryName){
+      return res.status(400).json({ message: "Country Name is Required!" }).end();
+    }
+
+    const newCountry = new Country({
+      countryName: req.body.countryName,
+    });
+
+    const savedCountry = await newCountry.save();
+    return res.status(200).json({ message: "Successfully Added" }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+export const getAllCountries = async (req, res, next) => {
+  try {
+
+  
+    const allCountries = await Country.find();
+
+
+    return res.status(200).json({ result:allCountries }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+export const deleteCountry = async (req, res, next) => {
+  try {
+
+
+    if(!req.params.id){
+      return res.status(400).json({ message: "Id is Required!" }).end();
+    }
+  
+   await Country.findByIdAndDelete(req.params.id);
+
+
+    return res.status(200).json({ message:`Successfully deleted` }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
+export const updateCountry = async (req, res, next) => {
+  try {
+
+  
+    if (!req.params.id) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+
+    const existingCountry = await Country.findByIdAndUpdate(req.params.id,{$set:{
+      countryName: req.body.countryName
+    }});
+
+    if (!existingCountry) {
+      return res.status(400).json({ message: "Country Not Exist!!" }).end();
+    }
+
+   
+    return res
+      .status(200)
+      .json({ message: "Successfully Updated" })
+      .end();
   } catch (error) {
     return res
       .status(400)

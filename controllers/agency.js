@@ -10,9 +10,9 @@ import  jwt  from "jsonwebtoken";
 
 export const createAgency = async (req, res, next) => {
   try {
-    const { username, password, name } = req.body;
+    const { username, password, name,country,language,imageFile } = req.body;
 
-    if (!password || !username || !name) {
+    if (!password || !username || !name || !country || !language || !imageFile) {
       return res
         .status(400)
         .json({ message: "All fields are required!" })
@@ -26,7 +26,7 @@ export const createAgency = async (req, res, next) => {
     }
 
 
-    const newAgency = new AgencyModel({ username, password, name });
+    const newAgency = new AgencyModel({ username, password, name,country,imageFile,language });
 
     const savedAgency = await newAgency.save();
 
@@ -82,6 +82,9 @@ export const getAllAgencyById = async (req, res, next) => {
 
 export const editAgencyById = async (req, res, next) => {
   try {
+
+    console.log(req.body)
+   
     if (!req.params.id) {
       return res.status(400).json({ message: "Id Not Provided!" }).end();
     }
@@ -93,7 +96,6 @@ export const editAgencyById = async (req, res, next) => {
     }
 
     const updateData = { ...req.body };
-
 
     const data = await AgencyModel.findByIdAndUpdate(
       req.params.id, // Ensure 'id' matches your route parameter

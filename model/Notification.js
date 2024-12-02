@@ -7,6 +7,9 @@ const NotificationSchema = new Schema({
     imageFile: {
         type: Object,
     },
+    project:{
+        type: Schema.Types.ObjectId,
+    }
 }, { timestamps: true });
 
 const Notification = model("Notification", NotificationSchema);
