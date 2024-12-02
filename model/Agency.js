@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import mongoose, { Schema, model } from "mongoose";
 
 const AgencySchema = new Schema({
     name:{
@@ -24,7 +24,7 @@ const AgencySchema = new Schema({
         type: String,
     },
     language:{
-        type: String,
+        type: [mongoose.Types.ObjectId]
     }
 
 }, { timestamps: true });

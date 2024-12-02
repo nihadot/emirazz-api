@@ -12,17 +12,16 @@ export const createAgency = async (req, res, next) => {
   try {
     const { username, password, name,country,language,imageFile } = req.body;
 
-    if (!password || !username || !name || !country || !language || !imageFile) {
+    if (!password || !username || !name || !country || !language.length > 0 || !imageFile) {
       return res
         .status(400)
         .json({ message: "All fields are required!" })
         .end();
     }
-
     const existMail = await AgencyModel.findOne({ username });
 
     if (existMail) {
-      return res.status(400).json({ message: "Mail-ID Exist!" }).end();
+      return res.status(400).json({ message: "Username Exist!" }).end();
     }
 
 
@@ -80,44 +79,115 @@ export const getAllAgencyById = async (req, res, next) => {
   }
 };
 
-export const editAgencyById = async (req, res, next) => {
-  try {
+// export const editAgencyById = async (req, res, next) => {
+//   try {
 
-    console.log(req.body)
-   
-    if (!req.params.id) {
-      return res.status(400).json({ message: "Id Not Provided!" }).end();
+//     if (!req.params.id) {
+//       return res.status(400).json({ message: "Id Not Provided!" }).end();
+//     }
+
+//     const existingAgency = await AgencyModel.findById(req.params.id);
+
+//     if (!existingAgency) {
+//       return res.status(400).json({ message: "Item Not Exist!!" }).end();
+//     }
+
+    
+//     const updateData = { ...req.body };
+
+//     // if(req.body.language.length === 0){
+//     //   delete
+//     // }
+    
+//     console.log(updateData,'--')
+//     if(updateData.language.length === 0){
+//       delete updateData.language;
+//     }
+
+//     if(updateData?.language?.length > 0){
+
+//       for  (const element of req.body.language) {
+//         existingAgency.language.push(req.body.language);
+//       }
+//       existingAgency.isModified(req.body.language);
+//       await existingAgency.save();
+//       delete updateData.language
+//     }
+
+
+//     const data = await AgencyModel.findByIdAndUpdate(
+//       req.params.id, // Ensure 'id' matches your route parameter
+//       { $set: updateData },
+//       { new: true }
+//     );
+
+//     if (!data) {
+//       return res.status(404).json({ message: "Agency not found" });
+//     }
+
+//     return res
+//       .status(200)
+//       .json({ message: "Successfully Updated", result: data });
+//   } catch (error) {
+//     return res
+//       .status(400)
+//       .json({ message: error.message || "Internal server error!" })
+//       .end();
+//   }
+// };
+
+export const editAgencyById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate if 'id' is provided
+    if (!id) {
+      return res.status(400).json({ message: "Agency ID not provided." });
     }
 
-    const existingAgency = await AgencyModel.findById(req.params.id);
+    // Find existing agency by ID
+    const existingAgency = await AgencyModel.findById(id);
 
     if (!existingAgency) {
-      return res.status(400).json({ message: "Item Not Exist!!" }).end();
+      return res.status(404).json({ message: "Agency not found." });
     }
 
     const updateData = { ...req.body };
 
-    const data = await AgencyModel.findByIdAndUpdate(
-      req.params.id, // Ensure 'id' matches your route parameter
-      { $set: updateData },
-      { new: true }
-    );
-
-    if (!data) {
-      return res.status(404).json({ message: "Agency not found" });
+    // Handle 'language' updates separately
+    if (updateData.language?.length === 0) {
+      delete updateData.language; // Ignore empty 'language' updates
+    } else if (Array.isArray(updateData.language) && updateData.language.length > 0) {
+      await AgencyModel.findByIdAndUpdate(
+        id,
+        { $addToSet: { language: { $each: updateData.language } } }, // Add unique languages only
+        { new: true }
+      );
+      delete updateData.language; // Avoid duplicate processing
     }
 
-    return res
-      .status(200)
-      .json({ message: "Successfully Updated", result: data });
+    // Update remaining fields
+    const updatedAgency = await AgencyModel.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedAgency) {
+      return res.status(404).json({ message: "Agency not found after update." });
+    }
+
+    return res.status(200).json({
+      message: "Agency successfully updated.",
+      result: updatedAgency,
+    });
   } catch (error) {
-    return res
-      .status(400)
-      .json({ message: error.message || "Internal server error!" })
-      .end();
+    console.error("Error updating agency:", error); // Log internal error
+    return res.status(500).json({
+      message: "An unexpected error occurred while updating the agency.",
+    });
   }
 };
-
 export const deleteAgencyById = async (req, res, next) => {
   try {
     if (!req.params.id) {
@@ -252,5 +322,34 @@ export const loginAgency = async (req, res, next) => {
     
     return res.status(400).json({message: error.message || 'Internal server error!'}).end();
 
+  }
+};
+
+
+
+export const deleteLangUnderAgent = async (req, res, next) => {
+  try {
+    if (!req.params.langId || !req.params.agencyId) {
+      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    }
+
+    const existingAgency = await AgencyModel.findById(req.params.agencyId);
+
+    if (!existingAgency) {
+      return res.status(400).json({ message: "Agent Not Exist!!" }).end();
+    }
+
+    if(existingAgency.language.length === 1){
+      return res.status(400).json({ message: "At least one language should be there." }).end();
+    }
+
+    await AgencyModel.findByIdAndUpdate(req.params.agencyId,{$pull: { language:req.params.langId } });
+
+    return res.status(200).json({ message: "Successfully Deleted" }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
   }
 };

@@ -1,5 +1,5 @@
 import express from 'express';
-import { createAgency,getAllAgency,editAgencyById,deleteAgencyById,assignedByAgency,loginAgency } from '../controllers/agency.js';
+import { createAgency,getAllAgency,editAgencyById,deleteAgencyById,deleteLangUnderAgent,assignedByAgency,loginAgency } from '../controllers/agency.js';
 import { verifyAdmin, verifyAdminOrAgency } from '../middleware/verifyingToken.js';
 import { getAllAgencyById } from '../controllers/agency.js';
 
@@ -21,5 +21,6 @@ router.delete("/delete-agency/:id", verifyAdmin, deleteAgencyById)
 
 router.put("/assigned-by-agency",verifyAdmin, assignedByAgency)
 
+router.delete("/delete/lang/:langId/:agencyId", verifyAdmin, deleteLangUnderAgent) 
 
 export default router
