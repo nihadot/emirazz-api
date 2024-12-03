@@ -46,9 +46,62 @@ export const createAgency = async (req, res, next) => {
 
 export const getAllAgency = async (req, res, next) => {
   try {
-    const getAgencies = await AgencyModel.find();
+    console.log('first')
 
-    return res.status(200).json({ result: getAgencies }).end();
+        const agencies = await AgencyModel.aggregate([
+          // {
+          //   $set: {
+          //     language: {
+          //       $map: {
+          //         input: "$language", // Convert string `language` IDs to ObjectId
+          //         as: "langId",
+          //         in: { $toObjectId: "$$langId" }
+          //       }
+          //     },
+          //     country: { $toObjectId: "$country" } // Convert `country` to ObjectId
+          //   } 
+          // },
+          {
+            $lookup: {
+              from: "languages", // The related collection for `language`
+              localField: "language", // Local field in Agency
+              foreignField: "_id", // Matching field in `languages`
+              as: "languageDetails"
+            }
+          },
+          {
+            $set: {
+              country: { $toObjectId: "$country" } // Convert the `developer` string to ObjectId
+            }
+          },
+          {
+            $lookup: {
+              from: "countries", // The related collection for `country`
+              localField: "country", // Local field in Agency
+              foreignField: "_id", // Matching field in `countries`
+              as: "countryDetails"
+            }
+          },
+          {
+            $unwind: {
+              path: "$countryDetails",
+              preserveNullAndEmptyArrays: true // Keep agency even if no country match
+            }
+          },
+          {
+            $project: {
+              name: 1,
+              username: 1,
+              isAgency: 1,
+              imageFile: 1,
+              languageDetails: 1, // Populated language data
+              countryDetails: { $ifNull: ["$countryDetails", null] } // Ensure `null` for unmatched
+            }
+          }
+        ])
+         
+
+    return res.status(200).json({ result: agencies }).end();
   } catch (error) {
     return res
       .status(400)
