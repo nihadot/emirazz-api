@@ -406,3 +406,20 @@ export const deleteLangUnderAgent = async (req, res, next) => {
       .end();
   }
 };
+
+
+export const getProfile = async (req, res, next) => {
+  try {
+  
+
+        const getProfile = await AgencyModel.findById(req.user.id)
+         console.log(getProfile,'getProfile')
+
+    return res.status(200).json({ result: getProfile }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
