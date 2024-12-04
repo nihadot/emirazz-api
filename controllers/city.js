@@ -6,6 +6,7 @@ import Property from "../model/Property.js";
 import { fetchCitiesAndCount } from "../helpers/fetchCitiesAndCount.js";
 import { sortProjects } from "../helpers/sortProjects.js";
 import City from "../model/City.js";
+import slugify from "slugify";
 
 export const create = async (req, res, next) => {
   try {
@@ -21,9 +22,29 @@ export const create = async (req, res, next) => {
       });
     }
 
+    const isExist = await CityModel.findOne({cityName: req.body.cityName});
+
+
+    if(isExist){
+      return res.status(400).json({ message: "City name already exists" }).end();
+    }
+
     if(value.priority){
      value.priorityExists = true;
     }
+
+          // create slug url
+          const slugName = slugify(req.body.projectTitle,{lower:true});
+
+
+    const isSlug = await CityModel.findOne({slug: slugName});
+
+
+    if(isSlug){
+      return res.status(400).json({ message: "City name already exists" }).end();
+    }
+
+    value.slug = slugName;
 
     // Create a new city using the validated data
     const newCity = new City(value);

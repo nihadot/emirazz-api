@@ -99,6 +99,11 @@ const PropertySchema = new Schema({
     },
     projectMetaKeywords:{
         type:String,
+    },
+    slug:{
+        type: String,
+        required: true,
+        unique: true,
     }
 
 

@@ -30,7 +30,9 @@ import {
     deletePriorityFromProjectById,
     deleteAdsFromProjectById,
     getPropertyCountFromProject,
-    updateProductStatusToPublic
+    updateProductStatusToPublic,
+    getByName,
+    getProjectsByCityName,getClosedStatusEnq
 } from '../controllers/property.js';
 import { verifyAdmin, verifyAdminOrAgency, verifyToken } from '../middleware/verifyingToken.js';
 import { upload } from '../middleware/multer.js';
@@ -48,6 +50,7 @@ router.get("/", getAll)
 router.put("/",verifyAdmin, upload,editById)
 // DELETE PROPERTY BY ID
 router.delete("/:id", verifyAdmin, deleteById) 
+router.get("/property-closed-status",verifyAdmin, getClosedStatusEnq);
 
 router.post("/form", createEnquiry) 
 router.get("/form",verifyAdmin, getEnquiry) 
@@ -56,19 +59,21 @@ router.put("/form",verifyAdminOrAgency, updateStatus)
 router.put("/ads",verifyAdmin, updateAdsStatus) 
 router.get("/counts", getCounts) 
 router.get("/:id", getById)
+router.get("/name/:name", getByName)
 
 router.post("/enq", addEnq) 
 router.post("/small-image/:id", deleteSmallImage) 
 
 router.get("/property-type/:name", getProjectsByPropertyTypeId) 
 router.get("/city/:id", getProjectsByCityId) 
+router.get("/city/name/:name", getProjectsByCityName) 
 router.get("/developers/:id", getProjectsByDevelopersId) 
 
-router.put("/enq-change-note/:id", enqChangeNoteStatus) 
+router.put("/enq-change-note/:id",verifyAdminOrAgency, enqChangeNoteStatus) 
 // router.put("/enq-change-note/:id", enqChangeNoteStatus) 
 
 router.delete("/delete-existing-city/:cityId/:propertyId", deleteExistingCityByPropertyIdAndCityId) 
-router.put("/enq-toggle-lock/:lockStatus/:enquiryId", updateToggleLock) 
+router.put("/enq-toggle-lock/:lockStatus/:enquiryId",verifyAdminOrAgency, updateToggleLock) 
 router.put("/details/:id",verifyAdmin, updateProjectBasicDetails) 
 router.delete("/delete-image/:id",verifyAdmin, deleteProjectByIdImage) ;
 

@@ -1,5 +1,6 @@
 import BlogModel from "../model/Blog.js";
 import { deleteFile } from "../middleware/deleteFile.js";
+import slugify from "slugify";
 
 export const create = async (req, res, next) => {
   try {
@@ -21,7 +22,23 @@ export const create = async (req, res, next) => {
     }
 
 
-    const newBlog = new BlogModel({...req.body });
+const isExist = await BlogModel.findOne({blogTitle: req.body.blogTitle});
+
+
+      if(isExist){
+        return res.status(400).json({ message: "Blog title already exists" }).end();
+      }
+
+   // create slug url
+   const slugName = slugify(req.body.blogTitle,{lower:true});
+
+
+   const data = {
+    ...req.body,
+    slug:slugName
+   }
+
+    const newBlog = new BlogModel(data);
     const savedBlog = await newBlog.save();
     return res.status(200).json({ result: savedBlog }).end();
   } catch (error) {
@@ -148,3 +165,28 @@ export const deleteById = async (req, res, next) => {
       .end();
   }
 };
+
+
+
+
+export const getByName = async (req, res, next) => {
+  try {
+    if (!req.params.name) {
+      return res.status(400).json({ message: "Name not provided" });
+    }
+
+    // Query the database
+    const getBlog = await BlogModel.findOne({slug:req.params.name});
+
+ 
+    if (!getBlog) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+
+    return res.status(200).json({ result: getBlog });
+  } catch (error) {
+    console.error("Error:", error); // Log the error for debugging
+    return res.status(500).json({ message: "Internal server error!" });
+  }
+};
+

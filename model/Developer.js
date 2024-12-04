@@ -28,7 +28,12 @@ const DeveloperSchema = new Schema({
         type: Boolean,
         default: false,
     }
-    
+    ,
+    slug:{
+      type: String,
+      required: true,
+      unique: true,
+  }
     
     
 }, { timestamps: true });

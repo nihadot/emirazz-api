@@ -1,5 +1,5 @@
 import express from 'express';
-import { create,getAll,deleteById,editById,getById } from '../controllers/blog.js';
+import { create,getAll,getByName,deleteById,editById,getById } from '../controllers/blog.js';
 import { verifyAdmin } from '../middleware/verifyingToken.js';
 import { upload } from '../middleware/multer.js';
 
@@ -11,6 +11,7 @@ const router = express.Router()
 router.post("/",verifyAdmin,create)
 // GET ALL PROPERTY
 router.get("/", getAll)
+router.get("/name/:name", getByName)
 // GET BY ID
 router.get("/get-one/:id",getById)
 

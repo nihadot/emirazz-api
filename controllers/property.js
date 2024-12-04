@@ -15,8 +15,9 @@ import Notification from "../model/Notification.js";
 import AssignedModel from "../model/AssigendProjects.js";
 import Agency from "../model/Agency.js";
 import City from "../model/City.js";
-
+import slugify from "slugify";
 import Joi from "joi";
+import ClosedEnq from "../model/ClosedEnq.js";
 
 // Validation schema for required fields
 const addingProject = Joi.object({
@@ -70,6 +71,21 @@ export const create = async (req, res, next) => {
       if(isExist){
         return res.status(400).json({ message: "Project title already exists" }).end();
       }
+
+
+      // create slug url
+      const slugName = slugify(req.body.projectTitle,{lower:true});
+
+
+
+    const isSlug = await PropertyModel.findOne({slug: slugName});
+
+
+    if(isSlug){
+      return res.status(400).json({ message: "Project title already exists" }).end();
+    }
+
+    value.slug = slugName;
 
       if(value.priority){
         value.priorityExists = true;
@@ -313,6 +329,87 @@ export const getById = async (req, res, next) => {
       .end();
   }
 };
+export const getByName = async (req, res, next) => {
+  try {
+    if (!req.params.name) {
+      return res.status(400).json({ message: "id not Provided" });
+    }
+
+    const name = req.params.name
+    const items = await PropertyModel.aggregate([
+      {
+        $match: {
+          slug: name
+        }
+      },
+  
+      {
+        $set: {
+          cities: {
+            $map: {
+              input: "$cities", // The array of string IDs
+              as: "cityId",     // Temporary variable for each element
+              in: { $toObjectId: "$$cityId" } // Convert each string to ObjectId
+            }
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: "cities", // Name of the related collection
+          localField: "cities", // The converted ObjectId array
+          foreignField: "_id", // Field in the `cities` collection to match
+          as: "cityDetails" // Output array with matched documents
+        }
+      },
+      {
+        $set: {
+          developer: { $toObjectId: "$developer" } // Convert the `developer` string to ObjectId
+        }
+      },
+      {
+        $lookup: {
+          from: "developers", // Name of the related collection
+          localField: "developer", // The converted ObjectId
+          foreignField: "_id", // Field in the `developers` collection to match
+          as: "developerDetails" // Output array with matched documents
+        }
+      },
+      {
+        $unwind: "$developerDetails" // Ensure developer details are a single object
+      },
+      {
+        $set: {
+          adsOptions: { $cond: { if: { $not: "$adsOptions" }, then: null, else: { $toObjectId: "$adsOptions" } } } // Convert the `adsOptions` string to ObjectId if present
+        }
+      },
+      {
+        $lookup: {
+          from: "sidebannerlogos", // Name of the related collection
+          localField: "adsOptions", // The converted ObjectId
+          foreignField: "_id", // Field in the `sidebannerlogos` collection to match
+          as: "adsDetails" // Output array with matched documents
+        }
+      },
+      {
+        $unwind: {
+          path: "$adsDetails",
+          preserveNullAndEmptyArrays: true // Include documents without adsDetails
+        }
+      }
+    ])
+    
+
+
+    return res.status(200).json({ result: items }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};
+
 
 export const editById = async (req, res, next) => {
   try {
@@ -1512,8 +1609,15 @@ export const updateToggleLock = async (req, res, next) => {
       return res.status(400).json({ message: "Enquiry Not Exist!!" }).end();
     }
 
-console.log(existEnq.isLocked,'existEnq.isLocked')
-console.log(req.params.lockStatus)
+    // console.log(req.user.isAgency,'00')
+
+    if(req.user.isAgency && req.params.lockStatus === 'lock'){
+       new ClosedEnq({
+        agentId:req.user.id,
+        enqId:req.params.enquiryId
+      }).save();
+    }
+
     existEnq.isLocked = req.params.lockStatus === 'lock' ? true : false;
 
     await existEnq.save()
@@ -2009,3 +2113,160 @@ export const updateProductStatusToPublic = async (req, res, next) => {
       .end();
   }
 };
+
+
+
+// Helper function to format city name
+const formatName = (name) => {
+  return name
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
+export const getProjectsByCityName = async (req,res,next)=>{
+  try {
+    const name = req.params.name;
+    if (!name) {
+      return res.status(400).json({ message: "City name not provided" });
+    }
+
+       // Find city
+       const city = await City.findOne({
+        slug: name });
+
+      // console.log(formattedName)
+
+      // console.log(city)
+
+      if (!city) {
+        return res.status(404).json({ message: "City not found" });
+      }
+   
+
+      const items = await Property.aggregate([
+        {
+          $match: {
+            cities: city._id+'', // Match by city ID
+          },
+        },
+        {
+          $set: {
+            cities: {
+              $map: {
+                input: "$cities", // The array of string IDs
+                as: "cityId",     // Temporary variable for each element
+                in: { $toObjectId: "$$cityId" } // Convert each string to ObjectId
+              }
+            }
+          }
+        },
+        {
+          $lookup: {
+            from: "cities", // Name of the related collection
+            localField: "cities", // The converted ObjectId array
+            foreignField: "_id", // Field in the `cities` collection to match
+            as: "cityDetails" // Output array with matched documents
+          }
+        },
+        {
+          $set: {
+            developer: { $toObjectId: "$developer" } // Convert the `developer` string to ObjectId
+          }
+        },
+        {
+          $lookup: {
+            from: "developers", // Name of the related collection
+            localField: "developer", // The converted ObjectId
+            foreignField: "_id", // Field in the `developers` collection to match
+            as: "developerDetails" // Output array with matched documents
+          }
+        },
+        {
+          $unwind: "$developerDetails" // Ensure developer details are a single object
+        },
+        {
+          $set: {
+            adsOptions: { $cond: { if: { $not: "$adsOptions" }, then: null, else: { $toObjectId: "$adsOptions" } } } // Convert the `adsOptions` string to ObjectId if present
+          }
+        },
+        {
+          $lookup: {
+            from: "sidebannerlogos", // Name of the related collection
+            localField: "adsOptions", // The converted ObjectId
+            foreignField: "_id", // Field in the `sidebannerlogos` collection to match
+            as: "adsDetails" // Output array with matched documents
+          }
+        },
+        {
+          $unwind: {
+            path: "$adsDetails",
+            preserveNullAndEmptyArrays: true // Include documents without adsDetails
+          }
+        }
+      ])
+      
+    
+      
+    // const getProperties = await PropertyModel.find({citiesArrayRef: new mongoose.Types.ObjectId(id),isSold:false}).sort({"createdAt": 1});
+    // const projectsWithPropertyType = await fetchProjectsByPropertyType(getProperties,true);
+    // const projectsWithDeveloper = await fetchProjectsByDeveloper(projectsWithPropertyType,false);
+    // const projectsWithCity = await fetchProjectsByCity(projectsWithDeveloper,false);
+    const sortedProjects = sortProjects(items);
+
+    return res.status(200).json({ result: sortedProjects }).end();
+  
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+}
+
+
+
+
+export const getClosedStatusEnq = async (req,res,next)=>{
+  try {
+  
+
+       // Find city
+       const cities = await ClosedEnq.aggregate([
+        {
+          $set: {
+            agentId: { $toObjectId: "$agentId" } // Convert the `developer` string to ObjectId
+          }
+        },
+        {
+          $lookup: {
+            from: "agencies", // Name of the related collection
+            localField: "agentId", // The converted ObjectId
+            foreignField: "_id", // Field in the `developers` collection to match
+            as: "agentDetails" // Output array with matched documents
+          }
+        },
+        {
+          $unwind: {
+            path: "$agentDetails",
+            preserveNullAndEmptyArrays: true // Include documents without adsDetails
+          }
+        }
+
+       ]);
+
+
+       console.log(cities,'cities')
+
+    
+    const sortedProjects = sortProjects(cities);
+
+    return res.status(200).json({ result: sortedProjects }).end();
+  
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+}

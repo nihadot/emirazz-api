@@ -18,6 +18,11 @@ const BlogSchema = new Schema({
     date: {
         type: Date,
     },
+    slug:{
+        type: String,
+        required: true,
+        unique: true,
+    }
 }, { timestamps: true });
 
 const Blog = model("Blog", BlogSchema);

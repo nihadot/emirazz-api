@@ -40,6 +40,11 @@ const CitySchema = new Schema(
     priority: {
       type: Number, // Optional field
     },
+    slug:{
+      type: String,
+      required: true,
+      unique: true,
+  }
   },
   { timestamps: true }
 );

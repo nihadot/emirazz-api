@@ -1,5 +1,5 @@
 import express from 'express';
-import { create,getAll,deleteById,editById,getDeveloperById } from '../controllers/developer.js';
+import { create,getAll,deleteById,editById,getDeveloperById ,getDevelopersByName} from '../controllers/developer.js';
 import { verifyAdmin } from '../middleware/verifyingToken.js';
 import { upload } from '../middleware/multer.js';
 
@@ -16,6 +16,7 @@ router.get("/:id", getDeveloperById)
 router.put("/:id",verifyAdmin, editById)
 // DELETE PROPERTY BY ID
 router.delete("/:id", verifyAdmin, deleteById) 
+router.get("/name/:name", verifyAdmin, getDevelopersByName) 
 
 
 export default router
