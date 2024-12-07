@@ -35,25 +35,20 @@ export const create = async (req, res, next) => {
 export const getAll = async (req, res, next) => {
   try {
     const getAllSideBanners = await SideBannerLogo.find();
-
-    const getAllPropertes = await Property.find({isSold:false});
-
-    let newResultArray = [];
-
-    for (let item of getAllSideBanners) {
-      if (item) {
-        const result = getAllPropertes.find(
-          (itm) => itm.adsOptions + "" === item._id + ""
-        );
-        if (result) {
-          if (result) {
-            newResultArray.push({ property: { ...result._doc }, ...item._doc });
-          }
-        } else {
-          newResultArray.push({ ...item._doc });
-        }
-      }
-    }
+    const getAllProperties = await Property.find({ isSold: false });
+    
+    // Create a Map for quick lookup of properties by `adsOptions`
+    const propertiesMap = new Map(
+      getAllProperties.map((property) => [property?.adsOptions?.toString(), property])
+    );
+    
+    // Combine side banners with their corresponding properties
+    const newResultArray = getAllSideBanners.map((banner) => {
+      const property = propertiesMap.get(banner._id.toString());
+      return property
+        ? { property: { ...property._doc }, ...banner._doc }
+        : { ...banner._doc };
+    });
 
     return res.status(200).json({ result: newResultArray }).end();
   } catch (error) {

@@ -7,6 +7,7 @@ import City from "../model/City.js";
 import Developer from "../model/Developer.js";
 import Enquiry from "../model/Enquiry.js";
 import Property from "../model/Property.js";
+import ClosedEnq from "../model/ClosedEnq.js";
 
 export const register = async (req, res, next) => {
 
@@ -138,6 +139,37 @@ export const getAllCountAll = async (req, res, next) => {
 
       
       return res.status(200).json({ result:obj }).end();
+   
+  } catch (error) {
+    
+    return res.status(400).json({message: error.message || 'Internal server error!'}).end();
+
+  }
+};
+
+
+export const UpdateClosedEnquiry = async (req, res, next) => {
+
+  try {
+
+   if(!req.params.id){
+     return res.status(400).json({message:'Id is required!'}).end();
+   }
+
+
+
+  const savedClosedEnq =  await ClosedEnq.findByIdAndUpdate(req.params.id,{$set:{
+    nationality:req.body.nationality,
+    email:req.body.email,
+    passportNumber:req.body.passportNumber,
+    totalAmount:req.body.totalAmount,
+    reason:req.body.reason
+   }});
+
+  
+   if(!savedClosedEnq) return res.status(400).json({message:'Not found!'}).end();
+
+   return res.status(200).json({ result:savedClosedEnq }).end();
    
   } catch (error) {
     

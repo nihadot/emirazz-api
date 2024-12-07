@@ -573,6 +573,12 @@ export const updateStatus = async (req, res, next) => {
     if (!existAccount) {
       return res.status(400).json({ message: "Enquiry Not Exist!!" }).end();
     }
+//     console.log(existAccount.status)
+//     console.log(existAccount.closedEnqId )
+// return true;
+    if(existAccount.status  === 'closed'){
+      await ClosedEnq.findByIdAndDelete(existAccount.closedEnqId); 
+    }
 
     await Enquiry.findByIdAndUpdate(
       req.body.id,
@@ -1597,37 +1603,41 @@ export const deleteExistingPropertyTypeByPropertyIdAndPropertyTypeId = async (re
 
 export const updateToggleLock = async (req, res, next) => {
   try {
+    const { lockStatus, enquiryId } = req.params;
 
-    // console.log(req.params)
-    if (!req.params.lockStatus && !req.params.enquiryId) {
-      return res.status(400).json({ message: "Id Not Provided!" }).end();
+    // Validate input
+    if (!lockStatus || !enquiryId) {
+      return res.status(400).json({ message: "Id Not Provided!" });
     }
 
-    const existEnq = await Enquiry.findById(req.params.enquiryId);
-
+    // Check if the enquiry exists
+    const existEnq = await Enquiry.findById(enquiryId);
     if (!existEnq) {
-      return res.status(400).json({ message: "Enquiry Not Exist!!" }).end();
+      return res.status(400).json({ message: "Enquiry Not Exist!" });
     }
 
-    // console.log(req.user.isAgency,'00')
+    // Handle agency-specific logic for locking
+    if (req.user.isAgency && lockStatus === 'lock') {
+      const newEnq = new ClosedEnq({
+        agentId: req.user.id,
+        enqId: enquiryId,
+      });
 
-    if(req.user.isAgency && req.params.lockStatus === 'lock'){
-       new ClosedEnq({
-        agentId:req.user.id,
-        enqId:req.params.enquiryId
-      }).save();
+     
+      await newEnq.save();
+
+      // Link the closed enquiry ID to the existing enquiry
+      existEnq.closedEnqId = newEnq._id;
     }
 
-    existEnq.isLocked = req.params.lockStatus === 'lock' ? true : false;
+    // Update the locked status
+    existEnq.isLocked = lockStatus === 'lock';
+    await existEnq.save();
 
-    await existEnq.save()
-
-    return res.status(200).json({ message: "Successfully Updated" }).end();
+    return res.status(200).json({ message: "Successfully Updated" });
   } catch (error) {
-    return res
-      .status(400)
-      .json({ message: error.message || "Internal server error!" })
-      .end();
+    console.error("Error updating toggle lock:", error);
+    return res.status(500).json({ message: error.message || "Internal server error!" });
   }
 };
 
@@ -2232,36 +2242,97 @@ export const getClosedStatusEnq = async (req,res,next)=>{
   
 
        // Find city
-       const cities = await ClosedEnq.aggregate([
+       const item = await ClosedEnq.aggregate([
         {
           $set: {
-            agentId: { $toObjectId: "$agentId" } // Convert the `developer` string to ObjectId
+            enqId: { $toObjectId: "$enqId" } // Convert the `developer` string to ObjectId
           }
         },
         {
           $lookup: {
-            from: "agencies", // Name of the related collection
-            localField: "agentId", // The converted ObjectId
+            from: "enquiries", // Name of the related collection
+            localField: "enqId", // The converted ObjectId
             foreignField: "_id", // Field in the `developers` collection to match
-            as: "agentDetails" // Output array with matched documents
+            as: "enquiryDetails" // Output array with matched documents
           }
         },
         {
           $unwind: {
-            path: "$agentDetails",
+            path: "$enquiryDetails",
             preserveNullAndEmptyArrays: true // Include documents without adsDetails
           }
-        }
+        },
+        {
+          $lookup: {
+            from: "developers", // Name of the related collection
+            localField: "enquiryDetails.developerId", // The converted ObjectId
+            foreignField: "_id", // Field in the `developers` collection to match
+            as: "developerDetails" // Output array with matched documents
+          }
+        },
+        {
+          $unwind: {
+            path: "$developerDetails",
+            preserveNullAndEmptyArrays: true // Include documents without adsDetails
+          }
+        },
+        //
+        {
+          $lookup: {
+            from: "properties", // Name of the related collection
+            localField: "enquiryDetails.propertyId", // The converted ObjectId
+            foreignField: "_id", // Field in the `developers` collection to match
+            as: "projectDetails" // Output array with matched documents
+          }
+        },
+        {
+          $unwind: {
+            path: "$projectDetails",
+            preserveNullAndEmptyArrays: true // Include documents without adsDetails
+          }
+        }, 
 
+        {
+          $lookup: {
+            from: "agencies", // Name of the related collection
+            localField: "enquiryDetails.assignedTo", // The converted ObjectId
+            foreignField: "_id", // Field in the `developers` collection to match
+            as: "agencyDetails" // Output array with matched documents
+          }
+        },
+        {
+          $unwind: {
+            path: "$agencyDetails",
+            preserveNullAndEmptyArrays: true // Include documents without adsDetails
+          }
+        },
+        {
+          $set: {
+            nationality: { $toObjectId: "$nationality" } // Convert the `developer` string to ObjectId
+          }
+        },
+        {
+          $lookup: {
+            from: "countries", // Name of the related collection
+            localField: "nationality", // The converted ObjectId
+            foreignField: "_id", // Field in the `developers` collection to match
+            as: "countryDetails" // Output array with matched documents
+          }
+        },
+        {
+          $unwind: {
+            path: "$countryDetails",
+            preserveNullAndEmptyArrays: true // Include documents without adsDetails
+          }
+        },
        ]);
 
 
-       console.log(cities,'cities')
 
     
-    const sortedProjects = sortProjects(cities);
+    const sortedItem = sortProjects(item);
 
-    return res.status(200).json({ result: sortedProjects }).end();
+    return res.status(200).json({ result: sortedItem }).end();
   
   } catch (error) {
     return res

@@ -31,6 +31,10 @@ const enquirySchema = new Schema({
     },
     assignedTo:{
         type: mongoose.Types.ObjectId,
+    },
+    closedEnqId:{
+        type: mongoose.Types.ObjectId,
+        ref:"ClosedEnq"
     }
 }, { timestamps: true });
 
