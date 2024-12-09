@@ -18,7 +18,9 @@ const SideBannerSchema = new Schema(
     name: {
       type: String,
     },
-  
+    clickCount: { type: Number,
+      default: 0,
+    }
   },
   { timestamps: true }
 );

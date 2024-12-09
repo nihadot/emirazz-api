@@ -16,7 +16,7 @@ router.get("/:id", getDeveloperById)
 router.put("/:id",verifyAdmin, editById)
 // DELETE PROPERTY BY ID
 router.delete("/:id", verifyAdmin, deleteById) 
-router.get("/name/:name", verifyAdmin, getDevelopersByName) 
+router.get("/name/:name", getDevelopersByName) 
 
 
 export default router

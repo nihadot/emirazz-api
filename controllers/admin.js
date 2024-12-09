@@ -163,7 +163,8 @@ export const UpdateClosedEnquiry = async (req, res, next) => {
     email:req.body.email,
     passportNumber:req.body.passportNumber,
     totalAmount:req.body.totalAmount,
-    reason:req.body.reason
+    reason:req.body.reason,
+    ...(req.body.pdfFile && { pdfFile: req.body.pdfFile }),
    }});
 
   

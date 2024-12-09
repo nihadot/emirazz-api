@@ -26,7 +26,15 @@ const ClosedEnqSchema = new Schema({
     },
     reason :{
         type: String,
-    }
+    },
+    pdfFile: {
+    
+        asset_id: { type: String },
+        secure_url: { type: String },
+        url: { type: String },
+        public_id: { type: String },
+    
+},
 }, { timestamps: true });
 
 const ClosedEnq = model("closed-enq", ClosedEnqSchema);
