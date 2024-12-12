@@ -35,6 +35,10 @@ const ClosedEnqSchema = new Schema({
         public_id: { type: String },
     
 },
+view:{
+    type: Boolean,
+    default: false,
+}
 }, { timestamps: true });
 
 const ClosedEnq = model("closed-enq", ClosedEnqSchema);

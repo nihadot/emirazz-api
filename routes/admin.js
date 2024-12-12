@@ -1,5 +1,5 @@
 import express from 'express';
-import { register,login,getAdmin,getAllCountAll,UpdateClosedEnquiry } from '../controllers/admin.js';
+import { register,login,getAdmin,getAllCountAll,UpdateClosedEnquiry ,markAllViewsTrue} from '../controllers/admin.js';
 import { verifyAdmin, verifyToken } from '../middleware/verifyingToken.js';
 
 
@@ -14,6 +14,7 @@ router.post("/login", login)
 router.get("/profile", verifyAdmin, getAdmin) 
 router.get("/count-all", verifyAdmin, getAllCountAll) 
 router.put("/closed/update/:id", verifyAdmin, UpdateClosedEnquiry) 
+router.get("/closed-enq/viewed", verifyAdmin, markAllViewsTrue) 
 
 
 

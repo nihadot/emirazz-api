@@ -178,3 +178,24 @@ export const UpdateClosedEnquiry = async (req, res, next) => {
 
   }
 };
+
+
+
+export const markAllViewsTrue = async (req, res, next) => {
+  try {
+    // Update all documents' `view` field to `true`
+    const updateResult = await ClosedEnq.updateMany({}, { $set: { view: true } });
+
+    // Check if any documents were modified
+    if (updateResult.modifiedCount === 0) {
+      return res.status(404).json({ message: 'No documents found to update.' }).end();
+    }
+
+    return res.status(200).json({
+      message: 'All documents updated successfully.',
+      modifiedCount: updateResult.modifiedCount,
+    }).end();
+  } catch (error) {
+    return res.status(500).json({ message: error.message || 'Internal server error.' }).end();
+  }
+};
