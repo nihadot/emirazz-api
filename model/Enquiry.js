@@ -35,6 +35,9 @@ const enquirySchema = new Schema({
     closedEnqId:{
         type: mongoose.Types.ObjectId,
         ref:"ClosedEnq"
+    },
+    duplicateEnquiry:{
+        type:String,
     }
 }, { timestamps: true });
 

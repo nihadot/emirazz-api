@@ -270,7 +270,6 @@ export const assignedByAgency = async (req, res, next) => {
 
 
 
-    console.log('[BODY]:',req.body)
     if (!agencyId || !leadId) {
       return res.status(400).json({ message: "Id Not Provided!" }).end();
     }

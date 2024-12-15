@@ -668,7 +668,6 @@ export const deleteById = async (req, res, next) => {
 
 export const createEnquiry = async (req, res, next) => {
   try {
-    console.log(req.body,'created')
 
     if(!req.body.name || !req.body.number || !req.body.propertyId){
       return res.status(400).json({ message: "All fields are required!" }).end();
@@ -681,6 +680,18 @@ export const createEnquiry = async (req, res, next) => {
       return res.status(400).json({ message: "Property Not Found!" }).end();
     }
 
+
+
+    const isExistEnquiry = await Enquiry.findOne({number:req.body.number,propertyId:req.body.propertyId});
+
+    if(isExistEnquiry){
+      return res.status(400).json({ message: "Already submit!" }).end();
+    }
+
+    const isExistEnquiryDuplicate = await Enquiry.findOne({number:req.body.number});
+
+console.log(isExistEnquiryDuplicate,'assignedTo')
+
     const obj = {
       name: req.body.name,
       number: req.body.number,
@@ -688,9 +699,12 @@ export const createEnquiry = async (req, res, next) => {
       propertyId: req.body.propertyId,
       developerId: IsProperty.developer+''
     }
+    if(isExistEnquiryDuplicate && isExistEnquiryDuplicate.assignedTo){
+      obj.assignedTo = isExistEnquiryDuplicate.assignedTo;
+    }
 
-    console.log(obj,'obj')
-    const newEnquiry = new Enquiry(obj);
+
+    const newEnquiry = new Enquiry({...obj,...(isExistEnquiryDuplicate && {duplicateEnquiry:isExistEnquiryDuplicate._id} )});
     const saveEnquiry = await newEnquiry.save();
     return res.status(200).json({ result: saveEnquiry }).end();
   } catch (error) {
@@ -935,7 +949,10 @@ export const getEnquiry = async (req, res, next) => {
       //   $unwind: "$assignedDetails" // Ensure developer details are a single object
       // },
 
-    return res.status(200).json({ result: items }).end();
+    const sortedProjects = sortProjects(items);
+
+
+    return res.status(200).json({ result: sortedProjects }).end();
   } catch (error) {
     return res
       .status(400)
