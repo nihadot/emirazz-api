@@ -16,7 +16,7 @@ router.get("/name/:name", getByName)
 router.get("/get-one/:id",getById)
 
 // UPDATE PROPERTY BY ID
-router.put("/:id", verifyAdmin,upload,editById)
+router.put("/:id", verifyAdmin,editById)
 // DELETE PROPERTY BY ID
 router.delete("/:id", verifyAdmin, deleteById) 
 

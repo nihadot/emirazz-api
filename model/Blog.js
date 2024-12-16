@@ -22,6 +22,16 @@ const BlogSchema = new Schema({
         type: String,
         required: true,
         unique: true,
+    },
+    metaTitle:{
+        type:String,
+    },
+    metaDescription:{
+        type:String,
+    },
+
+    metaKeywords:{
+        type:String,
     }
 }, { timestamps: true });
 

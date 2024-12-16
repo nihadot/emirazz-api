@@ -33,8 +33,9 @@ export const create = async (req, res, next) => {
      value.priorityExists = true;
     }
 
+
           // create slug url
-          const slugName = slugify(req.body.projectTitle,{lower:true});
+          const slugName = slugify(req.body.cityName,{lower:true});
 
 
     const isSlug = await CityModel.findOne({slug: slugName});
