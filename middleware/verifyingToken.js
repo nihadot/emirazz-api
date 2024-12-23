@@ -79,3 +79,14 @@ export const verifyAdminOrAgencyOrDeveloper = (req, res, next) => {
   });
 };
 
+
+
+export const verifyUser = (req, res, next) => {
+  verifyToken(req, res, () => {
+    if (req.user && req.user.isUser) {
+      next();
+    } else {
+      return res.status(403).json({ message: "You are not authorized!" }).end();
+    }
+  });
+};

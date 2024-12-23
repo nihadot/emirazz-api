@@ -1,5 +1,5 @@
 import express from 'express';
-import { verifyAdmin } from '../middleware/verifyingToken.js';
+import { verifyAdmin, verifyUser } from '../middleware/verifyingToken.js';
 // import { createAgency,getAllAgency,editAgencyById,getProfile,deleteAgencyById,deleteLangUnderAgent,assignedByAgency,loginAgency } from '../controllers/agency.js';
 // import { verifyAdmin, verifyAdminOrAgency, verifyAgency } from '../middleware/verifyingToken.js';
 // import { getAllAgencyById } from '../controllers/agency.js';
@@ -8,7 +8,12 @@ import {
     syncAllProjectSlug,
     syncAllCitiesSlug,
     syncAllBlogSlug,
-    syncAllDevelopersSlug
+    syncAllDevelopersSlug,
+    signup,
+    login,
+    updateUserAPI,
+    deleteUser,
+    createFeedback
 } from "../controllers/prebuilt.js";
 
 const router = express.Router()
@@ -22,6 +27,11 @@ router.get("/sync-all-cities-slug",syncAllCitiesSlug)
 // // GET AGENCY BY ID
 router.get("/sync-all-blogs-slug",syncAllBlogSlug)
 router.get("/sync-all-developers-slug",syncAllDevelopersSlug)
+router.post("/signup",signup)
+router.post("/login",login)
+router.put("/update",verifyUser,updateUserAPI)
+router.delete("/account/delete",verifyUser,deleteUser)
+router.post("/feedback",createFeedback)
 
 // router.get("/get-agency/:id", verifyAdminOrAgency,getAllAgencyById)
 // // UPDATE AGENCY BY ID

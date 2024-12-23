@@ -1,10 +1,13 @@
+import Agency from "../model/Agency.js";
 import Blog from "../model/Blog.js";
 import City from "../model/City.js";
 import Developer from "../model/Developer.js";
 import Property from "../model/Property.js";
 
 import slugify from "slugify";
-
+import User from "../model/User.js";
+import jwt from "jsonwebtoken";
+import Feedback from "../model/Feedback.js";
 
 export const syncAllProjectSlug = async(req,res)=>{
     try {
@@ -169,3 +172,189 @@ export const syncAllDevelopersSlug = async(req,res)=>{
       }
 
 }
+
+
+export const signup = async(req,res)=>{
+
+// console.log(req.body);
+// return true;
+  const { email, name,password } = req.body;
+
+  if (!email || !password || !name) {
+    return res.status(400).json({message:'All fields are required!'}).end();
+  }
+
+  try {
+    const existUser = await User.findOne({ email });
+
+    if(existUser) return res.status(400).json({message:'User is existing, You can login now'}).end();
+
+    const newUser = new User({ name,email,password });
+
+    const savedUser = await newUser.save();
+
+
+    // const { isAdmin, ...otherDetails } = existUser._doc;
+
+  
+
+    // res.cookie("accessToken", accessToken, {
+    //   httpOnly: true,
+    //   maxAge: 30 * 24 * 60 * 60 * 1000,
+    //   secure: true, // Ensures the cookie is sent only over HTTPS connections
+    //   sameSite: 'None' // Allows the cookie to be sent in cross-origin requests
+    // }); //30 days valid
+
+    return res.status(200).json({ message:"User is created ,You can login now"})
+
+  } catch (error) {
+    
+    return res.status(400).json({message: error.message || 'Internal server error!'}).end();
+
+  }
+
+}
+
+
+export const login = async(req,res)=>{
+
+  // console.log(req.body);
+  // return true;
+    const { email,password } = req.body;
+  
+    if (!email || !password ) {
+      return res.status(400).json({message:'All fields are required!'}).end();
+    }
+  
+    try {
+      const existUser = await User.findOne({ email });
+  
+      if(!existUser) return res.status(400).json({message:'User not existing!'}).end();
+  
+      const existingPassword = await User.findOne({ password });
+      if(!existingPassword) return res.status(400).json({message:'User not existing!'}).end();
+
+     
+   
+      const accessToken = jwt.sign(
+        { id: existUser._id, isUser: existUser.isUser },
+        process.env.JWT_SECRET,
+        { expiresIn: "30 days" }
+      );
+  
+      // res.cookie("accessToken", accessToken, {
+      //   httpOnly: true,
+      //   maxAge: 30 * 24 * 60 * 60 * 1000,
+      //   secure: true, // Ensures the cookie is sent only over HTTPS connections
+      //   sameSite: 'None' // Allows the cookie to be sent in cross-origin requests
+      // }); //30 days valid
+  
+      return res.status(200).json({ result:existUser,message:"logged",token:accessToken})
+  
+    } catch (error) {
+      
+      return res.status(400).json({message: error.message || 'Internal server error!'}).end();
+  
+    }
+  
+  }
+
+  
+  export const updateUserAPI = async(req,res)=>{
+
+   
+    // console.log(req.body);
+    // return true;
+      const { email,name } = req.body;
+    
+      if (!email || !name ) {
+        return res.status(400).json({message:'All fields are required!'}).end();
+      }
+    
+      try {
+        // const existUser = await User.findOne({ email });
+    
+        // if(!existUser) return res.status(400).json({message:'User not existing!'}).end();
+    
+      // console.log(req.user)
+    
+      // return true;
+        const existingUser = await User.findByIdAndUpdate(req.user.id,{ $set:{
+          ...(req.body.name && {name:name}),
+          ...(req.body.email && {email:email}),
+        } },{new:true});
+        if(!existingUser) return res.status(400).json({message:'User not existing!'}).end();
+  
+       
+     
+        // const accessToken = jwt.sign(
+        //   { id: existUser._id, isUser: existUser.isUser },
+        //   process.env.JWT_SECRET,
+        //   { expiresIn: "30 days" }
+        // );
+    
+        // res.cookie("accessToken", accessToken, {
+        //   httpOnly: true,
+        //   maxAge: 30 * 24 * 60 * 60 * 1000,
+        //   secure: true, // Ensures the cookie is sent only over HTTPS connections
+        //   sameSite: 'None' // Allows the cookie to be sent in cross-origin requests
+        // }); //30 days valid
+    
+        return res.status(200).json({ result:existingUser,message:"Updated"})
+    
+      } catch (error) {
+        
+        return res.status(400).json({message: error.message || 'Internal server error!'}).end();
+    
+      }
+    
+    }
+
+    export const deleteUser = async(req,res)=>{
+
+  
+      
+        try {
+        //  console.log(req.user)
+          // return true
+          const existingUser = await User.findByIdAndDelete(req.user.id);
+          if(!existingUser) return res.status(400).json({message:'User not existing!'}).end();
+    
+         
+          return res.status(200).json({message:"User deleted successfully"})
+      
+        } catch (error) {
+          
+          return res.status(400).json({message: error.message || 'Internal server error!'}).end();
+      
+        }
+      
+      }
+
+    
+
+      
+      export const createFeedback = async(req,res)=>{
+
+  
+      
+        try {
+         console.log(req.body)
+          // return true
+          const {feedback} = req.body;
+          if(!feedback){
+            return res.status(200).json({message:"Feedback is required"})
+
+          }
+          const newFeedback = new Feedback({feedback})
+          await newFeedback.save();
+         
+          return res.status(200).json({message:"Successfully created"})
+      
+        } catch (error) {
+          
+          return res.status(400).json({message: error.message || 'Internal server error!'}).end();
+      
+        }
+      
+      }
