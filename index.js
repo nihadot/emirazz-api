@@ -18,6 +18,7 @@ import priorityRouter from "./routes/priority.js"
 import notificationRouter from "./routes/notification.js"
 import agencyRouter from "./routes/agency.js"
 import prebuildRouter from "./routes/prebuild.js"
+import searchRouter from "./routes/search.js"
 
 import { connectDataBase } from './connection/index.js';
 dotenv.config();
@@ -48,6 +49,7 @@ app.use("/api/v1/sidebar",sideBannerRouter)
 app.use("/api/v1/priority",priorityRouter)
 app.use("/api/v1/notification",notificationRouter)
 app.use("/api/v1/agency",agencyRouter)
+app.use("/api/v1/search",searchRouter)
 app.use("/api/v1/pre-build",prebuildRouter)
 app.get("/api/v1/",(req,res)=>{
   res.send(`<h1>Server is Working Fine<h1/>`)

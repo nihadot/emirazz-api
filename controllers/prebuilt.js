@@ -8,6 +8,8 @@ import slugify from "slugify";
 import User from "../model/User.js";
 import jwt from "jsonwebtoken";
 import Feedback from "../model/Feedback.js";
+import PropertyCounts from "../model/PropertyCounts.js";
+import { sortProjects } from "../helpers/sortProjects.js";
 
 export const syncAllProjectSlug = async(req,res)=>{
     try {
@@ -358,3 +360,54 @@ export const login = async(req,res)=>{
         }
       
       }
+
+
+      export const updateDBCount = async(req,res)=>{
+        try {
+         
+
+          const villa = await Property.countDocuments({ propertyType: "villa" });
+          const apartment = await Property.countDocuments({ propertyType: "apartment" });
+          const townhouse = await Property.countDocuments({ propertyType: "townhouse" });
+          const penthouse = await Property.countDocuments({ propertyType: "penthouse" });
+          const newCollection = new PropertyCounts({
+            apartment,penthouse,
+            townhouse,villa
+          })
+
+          const saved = newCollection.save();
+
+           return res.status(200).json({message:"Job is completed"})
+       
+         } catch (error) {
+           
+           return res.status(400).json({message: error.message || 'Internal server error!'}).end();
+       
+         }
+      }
+
+
+
+      
+
+export const getTheWholeCountPropertyType = async (req, res, next) => {
+  try {
+   
+
+    const result = await PropertyCounts.find();
+  
+  
+  
+
+    // const getCitiesWithCount = await fetchCitiesAndCount(getCities,true);
+
+    const sortedItems = sortProjects(result)
+// console.log(sortedItems,'sortedItems')
+    return res.status(200).json({ result:  sortedItems[0] }).end();
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: error.message || "Internal server error!" })
+      .end();
+  }
+};

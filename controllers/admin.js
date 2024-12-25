@@ -199,3 +199,57 @@ export const markAllViewsTrue = async (req, res, next) => {
     return res.status(500).json({ message: error.message || 'Internal server error.' }).end();
   }
 };
+
+
+
+export const searchQuery = async (req, res, next) => {
+  try {
+    // Destructure query parameters from the request
+    const { name, minPrice, maxPrice, type } = req.query;
+
+    // Build the query object
+    const query = {};
+
+    // Case-insensitive search for the name (projectTitle)
+    if (name) {
+      query.projectTitle = {
+        $regex: new RegExp(name, "i"), // "i" for case-insensitive matching
+      };
+    }
+
+    // Price range filter (minPrice and maxPrice)
+    if (minPrice || maxPrice) {
+      query.priceInAED = {}; // Ensure the price field is defined as an object
+
+      if (minPrice) {
+        query.priceInAED.$gte = parseFloat(minPrice); // Greater than or equal to minPrice
+      }
+
+      if (maxPrice) {
+        query.priceInAED.$lte = parseFloat(maxPrice); // Less than or equal to maxPrice
+      }
+    }
+
+    // Property type filter (if type is provided, search within propertyType array)
+    if (type) {
+      query.propertyType = { $in: [String(type+'').toLowerCase()] }; // Match property type in the array
+    }
+
+    // Perform the query
+    const properties = await Property.find(query)
+      .sort({ createdAt: -1 }) // Sort by creation date (descending) for the latest properties
+      .exec(); // Execute the query
+
+    if (!properties.length) {
+      return res.status(200).json({properties:[] });
+    }
+// console.log(properties.length)
+    // Return the results
+    return res.status(200).json({ properties });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message || "Internal server error." });
+  }
+};
+
+

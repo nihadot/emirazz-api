@@ -13,7 +13,9 @@ import {
     login,
     updateUserAPI,
     deleteUser,
-    createFeedback
+    createFeedback,
+    updateDBCount,
+    getTheWholeCountPropertyType
 } from "../controllers/prebuilt.js";
 
 const router = express.Router()
@@ -32,6 +34,8 @@ router.post("/login",login)
 router.put("/update",verifyUser,updateUserAPI)
 router.delete("/account/delete",verifyUser,deleteUser)
 router.post("/feedback",createFeedback)
+router.get("/crone/update/count",updateDBCount)
+router.get("/counts/count",getTheWholeCountPropertyType)
 
 // router.get("/get-agency/:id", verifyAdminOrAgency,getAllAgencyById)
 // // UPDATE AGENCY BY ID
