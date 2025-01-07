@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 
 export const verifyToken = (req, res, next) => {
-  // const token = req.cookies.accessToken;
+
   const token = req.headers.authorization;
 
   if (!token)
@@ -9,23 +9,27 @@ export const verifyToken = (req, res, next) => {
 
   const isToken = token.split(" ")[1];
 
-  if (isToken === 'null'){
+  // console.log(isToken,'isToken')
+
+  if (!isToken){
     return res.status(401).json({ message: "Your are not authenticated!" });
   }
 
-  jwt.verify(isToken, process.env.JWT_SECRET, (err, user) => {
-    if (err)
-      return res
+    jwt.verify(isToken, process.env.JWT_SECRET, (err, user) => {
+      if (err){
+        return res
         .status(403)
         .json({ message: err?.message || "Token is not valid!" })
         .end();
-    req.user = user;
-    next();
+      }
+      req.user = user;
+      next();
   });
 };
 
 export const verifyAdmin = (req, res, next) => {
   verifyToken(req, res, () => {
+
     if (req.user && req.user.isAdmin) {
       next();
     } else {

@@ -1,46 +1,71 @@
 import BlogModel from "../model/Blog.js";
 import { deleteFile } from "../middleware/deleteFile.js";
 import slugify from "slugify";
+import Counts from "../model/counts.js";
 
-export const create = async (req, res, next) => {
-  try {
- 
-    if(!req.body.blogTitle){
-     return res.status(400).json({ message: "Blog Title is required" });
-    }
+export const createNewBlog = async (req, res, next) => {
+  try { 
 
-    if(!req.body.blogBody){
-      return res.status(400).json({ message: "Blog Body is required" });
-    }
-
-    if(!req.body.date){
-      return res.status(400).json({ message: "Date is required" });
-    }
-
-    if(!req.body.imageFile){
-      return res.status(400).json({ message: "Image file is required" });
-    }
-
-
-const isExist = await BlogModel.findOne({blogTitle: req.body.blogTitle});
-
-
-      if(isExist){
-        return res.status(400).json({ message: "Blog title already exists" }).end();
-      }
-
+    const {
+      blogTitle,
+      blogTitleAr,
+      blogDescription,
+      blogDescriptionAr,
+      blogDate,
+      seoTitle,
+      seoTitleAr,
+      seoDescription,
+      seoDescriptionAr,
+      seoKeywords,
+      seoKeywordsAr,
+      imageLink,
+    } = req.body;
+    
    // create slug url
-   const slugName = slugify(req.body.blogTitle,{lower:true});
+   const slugNameEn = slugify(req.body.blogTitle,{lower:true});
+   const slugNameAr = slugify(req.body.blogTitleAr,{lower:true});
 
+   console.log(slugNameAr,slugNameEn);
+   
+   return true
+    // Create a new blog instance
+    const newBlog = new BlogModel({
+      blogTitle,
+      blogTitleAr,
+      blogDescription,
+      blogDescriptionAr,
+      blogDate,
+      seoTitle,
+      seoTitleAr,
+      seoDescription,
+      seoDescriptionAr,
+      seoKeywords,
+      seoKeywordsAr,
+      imageLink,
+      slugNameAr,
+      slugNameEn
+    });
 
-   const data = {
-    ...req.body,
-    slug:slugName
-   }
+    const isCount = await Counts.findOne({});
+    console.log(isCount,'isCount')
+    if(isCount){
+      isCount.countOfBlogs = (isCount.countOfBlogs)+1;
+      await isCount.save();
+    }else{
+      new Counts({countOfBlogs:1}).save();
+      
+    }
 
-    const newBlog = new BlogModel(data);
+    // Save to the database
     const savedBlog = await newBlog.save();
-    return res.status(200).json({ result: savedBlog }).end();
+
+    res.status(201).json({
+      success: true,
+      message: "Blog created successfully!",
+      data: savedBlog,
+    });
+
+
   } catch (error) {
     return res
       .status(400)

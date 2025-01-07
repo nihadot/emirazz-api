@@ -17,6 +17,13 @@ const AdminSchema = new Schema({
         type: Boolean,
         default: false,
     },
+    profileImage:{
+        type:String,
+    },
+    username:{
+        type:String,
+        required:true,
+    }
 }, { timestamps: true });
 
 const Admin = model("Admin", AdminSchema);

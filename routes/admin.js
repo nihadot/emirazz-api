@@ -1,20 +1,13 @@
 import express from 'express';
-import { register,login,getAdmin,getAllCountAll,UpdateClosedEnquiry ,markAllViewsTrue} from '../controllers/admin.js';
-import { verifyAdmin, verifyToken } from '../middleware/verifyingToken.js';
+import { login} from '../controllers/admin.js';
+import { loginLimiter, loginValidation } from '../middleware/validation.js';
 
 
 const router = express.Router()
 
 
-// CREATE
-router.post("/register", register)
 // LOGIN
-router.post("/login", login)
-// GET DETAILS OF ADMIN BY TOKEN
-router.get("/profile", verifyAdmin, getAdmin) 
-router.get("/count-all", verifyAdmin, getAllCountAll) 
-router.put("/closed/update/:id", verifyAdmin, UpdateClosedEnquiry) 
-router.get("/closed-enq/viewed", verifyAdmin, markAllViewsTrue) 
+router.post("/login",loginValidation, login)
 
 
 

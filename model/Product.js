@@ -1,25 +1,21 @@
 import { Schema, model } from "mongoose";
 
-const BlogSchema = new Schema(
+const ProductSchema = new Schema(
   {
-    blogTitle: {
+    productTitle: {
       type: String,
       required: true,
     },
-    blogTitleAr: {
+    productTitleAr: {
       type: String,
       required: true,
     },
-    blogDescription: {
+    productDescription: {
       type: String,
       required: true,
     },
-    blogDescriptionAr: {
+    productDescriptionAr: {
       type: String,
-      required: true,
-    },
-    blogDate: {
-      type: Date,
       required: true,
     },
     seoTitle: {
@@ -50,28 +46,36 @@ const BlogSchema = new Schema(
       public_id: { type: String, required: true },
       secure_url: { type: String, required: true },
       url: { type: String, required: true },
-      bytes: { type: Number, required: true },
       width: { type: Number, required: true },
       height: { type: Number, required: true },
     },
-    slugNameEn:{
-        type: String,
-        required: true,
-        unique: true,
+    slugNameEn: {
+      type: String,
+      required: true,
+      unique: true,
     },
-    slugNameAr:{
-        type: String,
-        required: true,
-        unique: true,
+    slugNameAr: {
+      type: String,
+      required: true,
+      unique: true,
     },
-    isDelete:{
-      type:Boolean,
-      default:false,
-    }
+    isDelete: {
+      type: Boolean,
+      default: false,
+    },
+     // New Fields
+     productDetails: {
+      type: String,
+      required: true,
+    }, // English name details
+    productDetailsAr: {
+      type: String,
+      required: true,
+    }, // Arabic name details
   },
   { timestamps: true }
 );
 
-const BlogModel = model("Blog", BlogSchema);
+const ProductModel = model("Product", ProductSchema);
 
-export default BlogModel;
+export default ProductModel;

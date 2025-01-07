@@ -1,24 +1,24 @@
 import { Schema, model } from "mongoose";
 
-const BlogSchema = new Schema(
+const NewsSchema = new Schema(
   {
-    blogTitle: {
+    newsTitle: {
       type: String,
       required: true,
     },
-    blogTitleAr: {
+    newsTitleAr: {
       type: String,
       required: true,
     },
-    blogDescription: {
+    newsDescription: {
       type: String,
       required: true,
     },
-    blogDescriptionAr: {
+    newsDescriptionAr: {
       type: String,
       required: true,
     },
-    blogDate: {
+    newsDate: {
       type: Date,
       required: true,
     },
@@ -32,12 +32,10 @@ const BlogSchema = new Schema(
     },
     seoDescription: {
       type: String,
-      required: true,
-    },
+      required: true,    },
     seoDescriptionAr: {
       type: String,
-      required: true,
-    },
+      required: true,    },
     seoKeywords: {
       type: String,
       required: true,
@@ -54,24 +52,24 @@ const BlogSchema = new Schema(
       width: { type: Number, required: true },
       height: { type: Number, required: true },
     },
-    slugNameEn:{
-        type: String,
-        required: true,
-        unique: true,
+    slugNameEn: {
+      type: String,
+      required: true,
+      unique: true,
     },
-    slugNameAr:{
-        type: String,
-        required: true,
-        unique: true,
+    slugNameAr: {
+      type: String,
+      required: true,
+      unique: true,
     },
-    isDelete:{
-      type:Boolean,
-      default:false,
-    }
+    isDelete: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
 
-const BlogModel = model("Blog", BlogSchema);
+const NewsModel = model("News", NewsSchema);
 
-export default BlogModel;
+export default NewsModel;

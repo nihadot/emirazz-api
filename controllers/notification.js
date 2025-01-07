@@ -1,10 +1,5 @@
 import NotificationModel from "../model/Notification.js";
-import PropertyModel from "../model/Property.js";
-import mongoose from "mongoose";
 import { deleteFile } from "../middleware/deleteFile.js";
-import Property from "../model/Property.js";
-import { fetchCitiesAndCount } from "../helpers/fetchCitiesAndCount.js";
-import { sortProjects } from "../helpers/sortProjects.js";
 import { sortDateWise } from "../helpers/dateWiseSort.js";
 
 export const create = async (req, res, next) => {
