@@ -91,3 +91,47 @@ export const login = async (req, res, next) => {
 
   }
 };
+
+
+// {
+//   "email":"emiraaz@gmail.com",
+//   "username":"emiraaz@admin",
+//   "password":"Emiraaz@123#",
+//   "isAdmin":false,
+//   "name":"Admin"
+// }
+
+export const register = async (req, res, next) => {
+
+  const { username,email, password, isAdmin=true, name } = req.body;
+
+  if (!password || !username || !email) {
+    return res.status(400).json({message:'All fields are required!'}).end();
+  }
+
+  const existMail = await AdminModel.findOne({ $or: [{ username }, { email: username }] });
+
+  if(existMail){
+    return res.status(400).json({message: 'Username Exist!'}).end();
+  }
+
+  const saltRounds = 10;
+
+  const salt = bcrypt.genSaltSync(saltRounds);
+
+  const hash = bcrypt.hashSync(password, salt);
+
+  const newAdmin = new AdminModel({ username,email, password: hash, isAdmin, name });
+
+  try {
+    const savedAdmin = await newAdmin.save();
+
+    const { password, isAdmin, ...otherDetails } = savedAdmin._doc;
+
+    res.status(200).json({result:otherDetails}).end();
+  } catch (error) {
+
+    return res.status(400).json({message: error.message || 'Internal server error!'}).end();
+
+  }
+};

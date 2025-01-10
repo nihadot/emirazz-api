@@ -33,7 +33,7 @@ connectDataBase()
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 app.use(cors({
-  origin:['http://localhost:5173','http://10.0.14.253:5174','http://10.0.14.253:5174/','*','http://10.0.15.87:5174','http://10.0.15.87:5174/','http://192.168.18.100:5174','http://192.168.18.100:5174/','http://localhost:5174','https://emirazz-api.onrender.com/api/v1','https://emirazz-api.onrender.com/api/v1/'],
+  origin:['http://localhost:5173','http://10.0.14.253:5174','http://10.0.14.253:5174/','*','http://10.0.15.87:5174','http://10.0.15.87:5174/','http://192.168.18.100:5174','http://192.168.18.100:5174/','http://localhost:5174','https://emirazz-api.onrender.com/api/v1','https://emirazz-api.onrender.com/api/v1/','https://emirazz-landin-page-ifsuofavq-nihadots-projects.vercel.app','https://emirazz-landin-page-ifsuofavq-nihadots-projects.vercel.app/'],
   credentials:true,
 }))
 app.use(morgan('dev')); // Logging middleware
